@@ -15,21 +15,24 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  name      String
-  email     String     @unique
-  password  String
-  workflows Workflow[]
+  id          String        @id @default(uuid())
+  name        String
+  email       String        @unique
+  password    String
+  workflows   Workflow[]
+  Credentials Credentials[]
 }
 
 model Workflow {
   id           String        @id @default(uuid())
+  title        String
   triggerId    String?
   trigger      Trigger?
   action       Action[]
   workflowRuns WorkflowRun[]
   user         User          @relation(fields: [userId], references: [id])
   userId       String
+  createdAt    DateTime      @default(now())
 }
 
 model Trigger {
@@ -71,10 +74,27 @@ model WorkflowRun {
   metaData          Json               @default("{}")
   workflow          Workflow           @relation(fields: [workflowId], references: [id])
   workflowRunOutBox WorkflowRunOutbox?
+  createdAt         DateTime           @default(now())
 }
 
 model WorkflowRunOutbox {
   id            String      @id @default(uuid())
   workflowRunId String      @unique
   workflowRun   WorkflowRun @relation(fields: [workflowRunId], references: [id])
+  createdAt     DateTime    @default(now())
+}
+
+model Credentials {
+  id        String    @id @default(uuid())
+  platform  Platforms
+  keys      Json      @default("{}")
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+enum Platforms {
+  email
+  telegram
 }
