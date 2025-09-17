@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  workflows Workflow[]
+}
+
+model Workflow {
+  id           String        @id @default(uuid())
+  triggerId    String?
+  trigger      Trigger?
+  action       Action[]
+  workflowRuns WorkflowRun[]
+  user         User          @relation(fields: [userId], references: [id])
+  userId       String
+}
+
+model Trigger {
+  id                  String            @id @default(uuid())
+  availableTriggersId String
+  type                AvailableTriggers @relation(fields: [availableTriggersId], references: [id])
+  workflowId          String            @unique
+  workflow            Workflow          @relation(fields: [workflowId], references: [id])
+  metadata            Json              @default("{}")
+}
+
+model AvailableTriggers {
+  id      String    @id @default(uuid())
+  name    String
+  Trigger Trigger[]
+  image   String
+}
+
+model Action {
+  id                 String           @id @default(uuid())
+  workflowId         String
+  workflow           Workflow         @relation(fields: [workflowId], references: [id])
+  availableActionsId String
+  type               AvailableActions @relation(fields: [availableActionsId], references: [id])
+  sortingOrder       Int              @default(0)
+  metadata           Json             @default("{}")
+}
+
+model AvailableActions {
+  id      String   @id @default(uuid())
+  name    String
+  actions Action[]
+  image   String
+}
+
+model WorkflowRun {
+  id                String             @id @default(uuid())
+  workflowId        String
+  metaData          Json               @default("{}")
+  workflow          Workflow           @relation(fields: [workflowId], references: [id])
+  workflowRunOutBox WorkflowRunOutbox?
+}
+
+model WorkflowRunOutbox {
+  id            String      @id @default(uuid())
+  workflowRunId String      @unique
+  workflowRun   WorkflowRun @relation(fields: [workflowRunId], references: [id])
+}
