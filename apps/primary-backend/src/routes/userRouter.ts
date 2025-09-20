@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { SigninSchema, SignupSchema } from "@repo/types/types";
 import { prisma } from "@repo/db";
-import bcrpyt from "bcrypt";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
 
-const router = Router();
+const router: Router = Router();
 
 router.post("/signup", async (req, res) => {
   const parsedData = SignupSchema.safeParse(req.body);
@@ -18,41 +18,41 @@ router.post("/signup", async (req, res) => {
   }
 
   try {
-    const userExsists = await prisma.user.findFirst({
-      where: { email: parsedData.data.username },
+    const userExists = await prisma.user.findFirst({
+      where: { email: parsedData.data.email },
     });
 
-    if (userExsists) {
+    if (userExists) {
       res.status(403).json({
-        message: "User already exsists",
+        message: "User already exists",
       });
       return;
     }
   } catch (e) {
     console.log("Error", e);
     res.status(500).json({
-      message: "Error while accessing db",
+      message: "Server Error",
     });
+    return;
   }
   try {
-    const hashedPassword = await bcrpyt.hash(parsedData.data.password, 10);
+    const hashedPassword = await bcrypt.hash(parsedData.data.password, 10);
 
     await prisma.user.create({
       data: {
-        email: parsedData.data.username,
+        email: parsedData.data.email,
         password: hashedPassword,
         name: parsedData.data.name,
       },
     });
-    // await sendEmail()
     res.json({
-      message: "Please verify account by checking your email",
+      message: "Signed up successfully",
     });
     return;
   } catch (e) {
     console.log(e);
     res.status(500).json({
-      message: "Error while accessing db",
+      message: "Error while signing up",
     });
     return;
   }
@@ -70,18 +70,18 @@ router.post("/signin", async (req, res) => {
   try {
     const user = await prisma.user.findFirst({
       where: {
-        email: parsedData.data.username,
+        email: parsedData.data.email,
       },
     });
 
     if (!user) {
       res.status(403).json({
-        message: "User does not exsist",
+        message: "User does not exist",
       });
       return;
     }
 
-    const isPasswordValid = await bcrpyt.compare(
+    const isPasswordValid = await bcrypt.compare(
       parsedData.data.password,
       user.password
     );
@@ -101,14 +101,17 @@ router.post("/signin", async (req, res) => {
     );
 
     res.json({
+      message: "Login successful",
       token,
+      userId: user.id,
     });
+    return;
   } catch (e) {
     res.status(500).json({
-      message: "Internal Servor Error",
+      message: "Internal Server Error",
     });
     return;
   }
 });
 
-export {router as userRouter}
+export { router as userRouter };
