@@ -1,7 +1,9 @@
-import { prisma } from "@repo/db";
+import { PrismaClient } from "@prisma/client";
+import "dotenv/config";
+const prismaClient = new PrismaClient();
 
 (async () => {
-  await prisma.availableTriggers.create({
+  await prismaClient.availableTriggers.create({
     data: {
       id: "webhook",
       name: "Webhook",
@@ -10,7 +12,7 @@ import { prisma } from "@repo/db";
     },
   });
 
-  await prisma.availableActions.createMany({
+  await prismaClient.availableActions.createMany({
     data: [
       {
         id: "email",

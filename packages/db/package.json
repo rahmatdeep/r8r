@@ -4,20 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev --skip-generate",
-    "db:deploy": "prisma migrate deploy"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
-    "@types/node": "^22.15.3"
-  },
   "dependencies": {
     "@prisma/client": "^6.16.2",
+    "dotenv": "^17.2.2",
     "prisma": "^6.16.2"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "ts-node": "^10.9.2"
   },
   "exports": {
     ".": "./src/index.ts"
