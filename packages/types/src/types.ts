@@ -22,3 +22,13 @@ export const WorkflowCreateSchema = z.object({
     })
   ),
 });
+
+export const CredentialCreateSchema = z.object({
+  title: z.string(),
+  platform: z.enum(["email", "telegram"]),
+  keys: z.json(),
+});
+
+export const CredentialDeleteSchema = z.object({
+  credentialsId: z.string(),
+});

@@ -3,6 +3,7 @@ import cors from "cors";
 import { userRouter } from "./routes/userRouter";
 import "dotenv/config";
 import { workflowRouter } from "./routes/workflowRouter";
+import { credentialsRouter } from "./routes/credentialsRouter";
 
 const app = express();
 const HTTP_PORT = process.env.HTTP_PORT || 3100;
