@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
-const prismaClient = new PrismaClient();
+import { prisma } from "@repo/db";
 
 (async () => {
-  await prismaClient.availableTriggers.create({
+  await prisma.availableTriggers.create({
     data: {
       id: "webhook",
       name: "Webhook",
@@ -11,7 +10,7 @@ const prismaClient = new PrismaClient();
     },
   });
 
-  await prismaClient.availableActions.createMany({
+  await prisma.availableActions.createMany({
     data: [
       {
         id: "email",
