@@ -11,7 +11,7 @@ export const SigninSchema = z.object({
   password: z.string(),
 });
 
-export const WorkflowCreateSchema = z.object({
+export const WorkflowSchema = z.object({
   availableTriggerId: z.string(),
   title: z.string(),
   triggerMetadata: z.any().optional(),
@@ -22,6 +22,18 @@ export const WorkflowCreateSchema = z.object({
     })
   ),
 });
+// export const WorkflowUpdateSchema = z.object({
+//   workflowId: z.string(),
+//   availableTriggerId: z.string(),
+//   title: z.string(),
+//   triggerMetadata: z.any().optional(),
+//   actions: z.array(
+//     z.object({
+//       availableActionId: z.string(),
+//       actionMetadata: z.any().optional(),
+//     })
+//   ),
+// });
 
 export const CredentialCreateSchema = z.object({
   title: z.string(),
