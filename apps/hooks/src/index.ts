@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { prisma } from "@repo/db";
 import "dotenv/config";
 import { deleteData, getData, setData } from "./utils/data";
@@ -6,6 +7,7 @@ import { deleteData, getData, setData } from "./utils/data";
 const app = express();
 const HOOKS_PORT = process.env.HOOKS_PORT || 3101;
 
+app.use(cors());
 app.use(express.json());
 
 app.all("/hooks/catch/:userId/:workflowId", async (req, res) => {
