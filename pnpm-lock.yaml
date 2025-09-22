@@ -136,6 +136,19 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
+  apps/worker:
+    dependencies:
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+    devDependencies:
+      '@repo/kafka':
+        specifier: workspace:*
+        version: link:../../packages/kafka
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
+
   packages/db:
     dependencies:
       '@prisma/client':
