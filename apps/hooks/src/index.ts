@@ -58,7 +58,7 @@ app.get("/testing", (req, res) => {
     const data = getData(workflowId as string);
     if (data) {
       deleteData(workflowId as string);
-      res.json({ data });
+      res.json(data);
     } else if (waited >= MAX_WAIT) {
       res.status(408).json({ message: "Timeout: No data found" });
     } else {
