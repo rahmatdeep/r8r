@@ -18,6 +18,25 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
+  apps/hooks:
+    dependencies:
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      dotenv:
+        specifier: ^17.2.2
+        version: 17.2.2
+      express:
+        specifier: ^5.1.0
+        version: 5.1.0
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
+      '@types/express':
+        specifier: ^5.0.1
+        version: 5.0.3
+
   apps/primary-backend:
     dependencies:
       '@repo/db':
