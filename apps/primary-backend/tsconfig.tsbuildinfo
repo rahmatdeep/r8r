@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/middleware.ts","./src/routes/credentialsrouter.ts","./src/routes/userrouter.ts","./src/routes/workflowrouter.ts"],"version":"5.9.2"}
+{"root":["./src/index.ts","./src/middleware.ts","./src/routes/action.ts","./src/routes/credentialsrouter.ts","./src/routes/trigger.ts","./src/routes/userrouter.ts","./src/routes/workflowrouter.ts"],"version":"5.9.2"}
