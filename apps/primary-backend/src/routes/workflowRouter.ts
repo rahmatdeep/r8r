@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { authMiddlware } from "../middleware";
-import { WorkflowSchema } from "@repo/types/types";
+import { WorkflowCreateSchema, WorkflowUpdateSchema } from "@repo/types/types";
 import { prisma } from "@repo/db";
 
 const router: Router = Router();
 
 router.post("/workflow", authMiddlware, async (req, res) => {
-  const parsedData = WorkflowSchema.safeParse(req.body);
+  const parsedData = WorkflowCreateSchema.safeParse(req.body);
 
   if (!parsedData.success || !req.id) {
     res.status(411).json({
@@ -18,6 +18,7 @@ router.post("/workflow", authMiddlware, async (req, res) => {
     await prisma.workflow.create({
       data: {
         userId: req.id,
+        id: parsedData.data.id,
         title: parsedData.data.title,
         trigger: {
           create: {
@@ -111,7 +112,7 @@ router.get("/workflow/:id", authMiddlware, async (req, res) => {
   }
 });
 router.put("/workflow/:id", authMiddlware, async (req, res) => {
-  const parsedData = WorkflowSchema.safeParse(req.body);
+  const parsedData = WorkflowUpdateSchema.safeParse(req.body);
   const workflowId = req.params.id;
 
   if (!parsedData.success || !req.id || !workflowId) {
