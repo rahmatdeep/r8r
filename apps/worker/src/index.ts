@@ -52,18 +52,23 @@ import { parse } from "./utils/parser";
 
       const workflowRunMetadata = workflowRunDetails?.metaData;
       if (currentAction.type.id === "email") {
-        const body = parse(
-          (currentAction.metadata as JsonObject)?.body as string,
-          workflowRunMetadata
-        );
-        const to = parse(
-          (currentAction.metadata as JsonObject)?.email as string,
-          workflowRunMetadata
-        );
+        const bodyTemplate = (currentAction.metadata as JsonObject)?.body;
+        const toTemplate = (currentAction.metadata as JsonObject)?.to;
+
+        if (
+          typeof bodyTemplate !== "string" ||
+          typeof toTemplate !== "string"
+        ) {
+          console.error(
+            "Action metadata missing body/to",
+            currentAction.metadata
+          );
+          return;
+        }
+        const body = parse(bodyTemplate, workflowRunMetadata);
+        const to = parse(toTemplate, workflowRunMetadata);
         console.log(`Sending email to: ${to}, with the body ${body}`);
       }
-
-     
 
       await new Promise((r) => setTimeout(r, 1000));
 

@@ -4,6 +4,9 @@ export function parse(
   startDelimeter = "{",
   endDelimeter = "}"
 ) {
+  if (typeof text !== "string") {
+    throw new Error("parse() expected a string but got " + typeof text);
+  }
   let startIndex = 0;
   let endIndex = 1;
 
@@ -11,8 +14,11 @@ export function parse(
   while (endIndex < text.length) {
     if (text[startIndex] === startDelimeter) {
       let endPoint = startIndex + 2;
-      while (text[endPoint] !== endDelimeter) {
+      while (endPoint < text.length && text[endPoint] !== endDelimeter) {
         endPoint++;
+      }
+      if (endPoint >= text.length) {
+        throw new Error("Unmatched delimiter in template: " + text);
       }
       //
       let stringHoldingValue = text.slice(startIndex + 1, endPoint);
@@ -24,9 +30,9 @@ export function parse(
         if (typeof localValues === "string") {
           localValues = JSON.parse(localValues);
         }
-        localValues = localValues[keys[i]];
+        localValues = localValues?.[keys[i]];
       }
-      finalString += localValues;
+      finalString += localValues ?? "";
       startIndex = endPoint + 1;
       endIndex = endPoint + 2;
     } else {
