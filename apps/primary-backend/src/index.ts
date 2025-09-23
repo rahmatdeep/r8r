@@ -4,8 +4,8 @@ import { userRouter } from "./routes/userRouter";
 import "dotenv/config";
 import { workflowRouter } from "./routes/workflowRouter";
 import { credentialsRouter } from "./routes/credentialsRouter";
-import { triggerRouter } from "./routes/trigger";
-import { actionRouter } from "./routes/action";
+import { triggerRouter } from "./routes/triggerRouter";
+import { actionRouter } from "./routes/actionRouter";
 
 const app = express();
 const HTTP_PORT = process.env.HTTP_PORT || 3100;

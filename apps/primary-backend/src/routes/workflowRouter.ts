@@ -10,7 +10,7 @@ import { prisma } from "@repo/db";
 
 const router: Router = Router();
 
-router.post("/workflow", authMiddlware, async (req, res) => {
+router.post("/", authMiddlware, async (req, res) => {
   const parsedData = WorkflowCreateSchema.safeParse(req.body);
 
   if (!parsedData.success || !req.id) {
@@ -75,7 +75,7 @@ router.post("/workflow", authMiddlware, async (req, res) => {
     });
   }
 });
-router.get("/workflow", authMiddlware, async (req, res) => {
+router.get("/", authMiddlware, async (req, res) => {
   try {
     const workflows = await prisma.workflow.findMany({
       where: {
@@ -106,7 +106,7 @@ router.get("/workflow", authMiddlware, async (req, res) => {
     });
   }
 });
-router.get("/workflow/:id", authMiddlware, async (req, res) => {
+router.get("/:id", authMiddlware, async (req, res) => {
   const workflowId = req.params.id;
 
   try {
@@ -140,7 +140,7 @@ router.get("/workflow/:id", authMiddlware, async (req, res) => {
     return;
   }
 });
-router.put("/workflow/:id", authMiddlware, async (req, res) => {
+router.put("/:id", authMiddlware, async (req, res) => {
   const parsedData = WorkflowUpdateSchema.safeParse(req.body);
   const workflowId = req.params.id;
 
