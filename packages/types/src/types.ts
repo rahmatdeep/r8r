@@ -42,25 +42,44 @@ export const WorkflowUpdateSchema = z.object({
 //   keys: z.json(),
 // });
 
-export const CredentialCreateSchema = z.object({
-  title: z.string(),
-  platform: z.enum(["email", "telegram"]),
-  keys: z.any(), // Initially allow any structure for `keys`
-}).superRefine((data, ctx) => {
-  if (data.platform === "email") {
-    const emailKeysValidation = z.object({
-      apiKey: z.string(), // Validate that `keys` contains an `apiKey`
-    }).safeParse(data.keys);
+export const CredentialCreateSchema = z
+  .object({
+    title: z.string(),
+    platform: z.enum(["email", "telegram"]),
+    keys: z.any(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.platform === "email") {
+      const emailKeysValidation = z
+        .object({
+          apiKey: z.string(),
+        })
+        .safeParse(data.keys);
 
-    if (!emailKeysValidation.success) {
-      ctx.addIssue({
-        path: ["keys"],
-        message: "Invalid keys for email platform",
-        code: "custom",
-      });
+      if (!emailKeysValidation.success) {
+        ctx.addIssue({
+          path: ["keys"],
+          message: "Invalid keys for email platform",
+          code: "custom",
+        });
+      }
     }
-  }
-});
+    if (data.platform === "telegram") {
+      const telegramKeysValidation = z
+        .object({
+          apiKey: z.string(),
+        })
+        .safeParse(data.keys);
+
+      if (!telegramKeysValidation.success) {
+        ctx.addIssue({
+          path: ["keys"],
+          message: "Invalid keys for telegram platform",
+          code: "custom",
+        });
+      }
+    }
+  });
 
 export const CredentialDeleteSchema = z.object({
   credentialsId: z.string(),
@@ -76,11 +95,25 @@ export const EmailActionMetadataSchema = z.object({
 });
 export type emailMetadataType = z.infer<typeof EmailActionMetadataSchema>;
 
+export const TelegramActionMetadataSchema = z.object({
+  chatId: z.string(), // `chatId` is now part of the metadata
+  message: z.string(), // The message to send
+});
+export type telegramMetadataType = z.infer<typeof TelegramActionMetadataSchema>;
+
 //CREDENTIALS
 export const EmailCredentialsSchema = z.object({
-  platform: "email",
+  platform: z.literal("email"),
   keys: {
     apiKey: z.string(),
   },
 });
 export type emailCredentialsType = z.infer<typeof EmailCredentialsSchema>;
+
+export const TelegramCredentialsSchema = z.object({
+  platform: z.literal("telegram"),
+  keys: z.object({
+    apiKey: z.string(),
+  }),
+});
+export type telegramCredentialsType = z.infer<typeof TelegramCredentialsSchema>;

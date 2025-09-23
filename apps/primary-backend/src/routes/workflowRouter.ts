@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authMiddlware } from "../middleware";
 import {
   EmailActionMetadataSchema,
+  TelegramActionMetadataSchema,
   WorkflowCreateSchema,
   WorkflowUpdateSchema,
 } from "@repo/types/types";
@@ -38,6 +39,17 @@ router.post("/workflow", authMiddlware, async (req, res) => {
                 res.status(400).json({
                   message: "Invalid email action metadata",
                   errors: emailMetadataValidation.error.issues,
+                });
+                throw new Error("Validation failed");
+              }
+            }
+            if (x.availableActionId === "telegram") {
+              const telegramMetadataValidation =
+                TelegramActionMetadataSchema.safeParse(x.actionMetadata);
+              if (!telegramMetadataValidation.success) {
+                res.status(400).json({
+                  message: "Invalid telegram action metadata",
+                  errors: telegramMetadataValidation.error.issues,
                 });
                 throw new Error("Validation failed");
               }
@@ -171,16 +183,32 @@ router.put("/workflow/:id", authMiddlware, async (req, res) => {
     });
 
     await Promise.all(
-      parsedData.data.actions.map((x, index) =>
-        prisma.action.create({
+            parsedData.data.actions.map((x, index) => {
+        if (x.availableActionId === "email") {
+          const emailMetadataValidation =
+            EmailActionMetadataSchema.safeParse(x.actionMetadata);
+          if (!emailMetadataValidation.success) {
+            throw new Error("Invalid email action metadata");
+          }
+        }
+      
+        if (x.availableActionId === "telegram") {
+          const telegramMetadataValidation =
+            TelegramActionMetadataSchema.safeParse(x.actionMetadata);
+          if (!telegramMetadataValidation.success) {
+            throw new Error("Invalid telegram action metadata");
+          }
+        }
+      
+        return prisma.action.create({
           data: {
             workflowId,
             availableActionsId: x.availableActionId,
             sortingOrder: index,
             metadata: x.actionMetadata,
           },
-        })
-      )
+        });
+      })
     );
 
     res.json({

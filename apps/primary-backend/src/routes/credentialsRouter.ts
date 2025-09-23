@@ -13,7 +13,7 @@ router.post("/", authMiddlware, async (req, res) => {
 
   if (!parsedData.success || !req.id) {
     res.status(403).json({
-      message: "Invalid types",
+      message: "Invalid request data",
     });
     return;
   }
@@ -41,39 +41,47 @@ router.post("/", authMiddlware, async (req, res) => {
 });
 
 router.get("/", authMiddlware, async (req, res) => {
-  const credentials = await prisma.credentials.findMany({
-    where: {
-      userId: req.id,
-    },
-  });
+  try {
+    const credentials = await prisma.credentials.findMany({
+      where: {
+        userId: req.id,
+      },
+    });
 
-  res.json({
-    credentials,
-  });
-  return;
+    res.json({
+      credentials,
+    });
+  } catch (e) {
+    console.error("Error fetching credentials", e);
+    res.status(500).json({
+      message: "Failed to fetch credentials",
+    });
+  }
 });
 
 router.delete("/", authMiddlware, async (req, res) => {
   const parsedData = CredentialDeleteSchema.safeParse(req.body);
   if (!parsedData.success || !req.id) {
     res.status(403).json({
-      message: "Invalid types",
+      message: "Invalid request data",
     });
     return;
   }
 
-  const credentials = await prisma.credentials.findUnique({
-    where: {
-      id: parsedData.data.credentialsId,
-    },
-  });
-
-  if (!credentials) {
-    res.status(403).json({
-      message: "No such credentials exist",
+  try {
+    const credentials = await prisma.credentials.findUnique({
+      where: {
+        id: parsedData.data.credentialsId,
+      },
     });
-    return;
-  } else {
+
+    if (!credentials) {
+      res.status(404).json({
+        message: "Credentials not found",
+      });
+      return;
+    }
+
     await prisma.credentials.delete({
       where: {
         id: parsedData.data.credentialsId,
@@ -81,9 +89,13 @@ router.delete("/", authMiddlware, async (req, res) => {
     });
 
     res.json({
-      message: `credentials deleted successfully`,
+      message: "Credentials deleted successfully",
     });
-    return;
+  } catch (e) {
+    console.error("Error deleting credentials", e);
+    res.status(500).json({
+      message: "Failed to delete credentials",
+    });
   }
 });
 

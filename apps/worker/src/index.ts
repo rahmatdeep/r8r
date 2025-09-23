@@ -2,6 +2,12 @@ import { JsonObject, prisma } from "@repo/db";
 import { kafka, TOPIC_NAME } from "@repo/kafka/kafka-client";
 import { parse } from "./utils/parser";
 import { sendEmail } from "./utils/email";
+import { sendTelegramMessage } from "./utils/telegram";
+import {
+  validateCredentials,
+  validateTelegramMetadata,
+  validateEmailMetadata,
+} from "./utils/validate";
 
 (async () => {
   const consumer = kafka.consumer({ groupId: "main-worker" });
@@ -57,57 +63,68 @@ import { sendEmail } from "./utils/email";
       }
 
       const workflowRunMetadata = workflowRunDetails?.metaData;
+
       if (currentAction.type.id === "email") {
         const credentials = workflowRunDetails?.workflow.user.Credentials.find(
           (cred) => cred.platform === "email"
         );
-        if (
-          !credentials ||
-          !credentials.keys ||
-          typeof credentials.keys !== "object" ||
-          credentials.keys === null ||
-          !(credentials.keys as JsonObject).apiKey
-        ) {
-          console.error("No email credentials found for the user");
-          return;
-        }
-        const apiKey = (credentials.keys as JsonObject).apiKey;
+        const apiKey = validateCredentials(credentials, "email");
+        if (!apiKey) return;
 
-        const bodyTemplate = (currentAction.metadata as JsonObject)?.body;
-        const toTemplate = (currentAction.metadata as JsonObject)?.to;
-        const subjectTemplate = (currentAction.metadata as JsonObject)?.subject;
-        const fromTemplate = (currentAction.metadata as JsonObject)?.from;
-        if (
-          typeof bodyTemplate !== "string" ||
-          typeof toTemplate !== "string" ||
-          typeof subjectTemplate !== "string" ||
-          typeof fromTemplate !== "string" ||
-          typeof apiKey !== "string"
-        ) {
-          console.error(
-            "Action metadata missing required fields",
-            currentAction.metadata
-          );
-          return;
-        }
-        const body = parse(bodyTemplate, workflowRunMetadata);
-        const to = parse(toTemplate, workflowRunMetadata);
-        const subject = parse(subjectTemplate, workflowRunMetadata);
-        const from = parse(fromTemplate, workflowRunMetadata);
-        const emailResponse = await sendEmail(
-          { apiKey },
-          to,
-          subject,
-          body,
-          from
+        const metadata = validateEmailMetadata(
+          currentAction.metadata as JsonObject
         );
+        if (!metadata) return;
 
-        if (!emailResponse.success) {
-          console.error("Failed to send email:", emailResponse.error);
-          return;
+        const body = parse(metadata.body, workflowRunMetadata);
+        const to = parse(metadata.to, workflowRunMetadata);
+        const subject = parse(metadata.subject, workflowRunMetadata);
+        const from = parse(metadata.from, workflowRunMetadata);
+
+        try {
+          const emailResponse = await sendEmail(
+            { apiKey },
+            to,
+            subject,
+            body,
+            from
+          );
+
+          if (!emailResponse.success) {
+            console.error("Failed to send email:", emailResponse.error);
+            return;
+          }
+
+          console.log(`Email sent successfully to: ${to}`);
+        } catch (error) {
+          console.error("Failed to send email:", error);
         }
+      }
 
-        console.log(`Email sent successfully to: ${to}`);
+      if (currentAction.type.id === "telegram") {
+        const credentials = workflowRunDetails?.workflow.user.Credentials.find(
+          (cred) => cred.platform === "telegram"
+        );
+        const apiKey = validateCredentials(credentials, "telegram");
+        if (!apiKey) return;
+
+        const metadata = validateTelegramMetadata(
+          currentAction.metadata as JsonObject
+        );
+        if (!metadata) return;
+
+        const message = parse(metadata.message, workflowRunMetadata);
+
+        try {
+          const telegramResponse = await sendTelegramMessage(
+            apiKey,
+            metadata.chatId,
+            message
+          );
+          console.log("Telegram message sent successfully:", telegramResponse);
+        } catch (error) {
+          console.error("Failed to send telegram message:", error);
+        }
       }
 
       await new Promise((r) => setTimeout(r, 1000));
