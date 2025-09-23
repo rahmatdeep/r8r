@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { authMiddlware } from "../middleware";
-import { WorkflowCreateSchema, WorkflowUpdateSchema } from "@repo/types/types";
+import {
+  EmailActionMetadataSchema,
+  WorkflowCreateSchema,
+  WorkflowUpdateSchema,
+} from "@repo/types/types";
 import { prisma } from "@repo/db";
 
 const router: Router = Router();
@@ -26,11 +30,24 @@ router.post("/workflow", authMiddlware, async (req, res) => {
           },
         },
         action: {
-          create: parsedData.data.actions.map((x, index) => ({
-            availableActionsId: x.availableActionId,
-            sortingOrder: index,
-            metadata: x.actionMetadata,
-          })),
+          create: parsedData.data.actions.map((x, index) => {
+            if (x.availableActionId === "email") {
+              const emailMetadataValidation =
+                EmailActionMetadataSchema.safeParse(x.actionMetadata);
+              if (!emailMetadataValidation.success) {
+                res.status(400).json({
+                  message: "Invalid email action metadata",
+                  errors: emailMetadataValidation.error.issues,
+                });
+                throw new Error("Validation failed");
+              }
+            }
+            return {
+              availableActionsId: x.availableActionId,
+              sortingOrder: index,
+              metadata: x.actionMetadata,
+            };
+          }),
         },
       },
     });

@@ -18,19 +18,26 @@ router.post("/", authMiddlware, async (req, res) => {
     return;
   }
 
-  await prisma.credentials.create({
-    data: {
-      platform: parsedData.data.platform,
-      title: parsedData.data.title,
-      keys: parsedData.data.keys === null ? undefined : parsedData.data.keys,
-      userId: req.id,
-    },
-  });
+  try {
+    await prisma.credentials.create({
+      data: {
+        platform: parsedData.data.platform,
+        title: parsedData.data.title,
+        keys: parsedData.data.keys === null ? undefined : parsedData.data.keys,
+        userId: req.id,
+      },
+    });
 
-  res.json({
-    message: "credentials stored successfully",
-  });
-  return;
+    res.json({
+      message: "credentials stored successfully",
+    });
+    return;
+  } catch (e) {
+    console.error("Error storing credentials", e);
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
 });
 
 router.get("/", authMiddlware, async (req, res) => {

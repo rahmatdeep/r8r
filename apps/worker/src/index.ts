@@ -1,6 +1,7 @@
 import { JsonObject, prisma } from "@repo/db";
 import { kafka, TOPIC_NAME } from "@repo/kafka/kafka-client";
 import { parse } from "./utils/parser";
+import { sendEmail } from "./utils/email";
 
 (async () => {
   const consumer = kafka.consumer({ groupId: "main-worker" });
@@ -37,6 +38,11 @@ import { parse } from "./utils/parser";
                   type: true,
                 },
               },
+              user: {
+                include: {
+                  Credentials: true,
+                },
+              },
             },
           },
         },
@@ -52,22 +58,56 @@ import { parse } from "./utils/parser";
 
       const workflowRunMetadata = workflowRunDetails?.metaData;
       if (currentAction.type.id === "email") {
+        const credentials = workflowRunDetails?.workflow.user.Credentials.find(
+          (cred) => cred.platform === "email"
+        );
+        if (
+          !credentials ||
+          !credentials.keys ||
+          typeof credentials.keys !== "object" ||
+          credentials.keys === null ||
+          !(credentials.keys as JsonObject).apiKey
+        ) {
+          console.error("No email credentials found for the user");
+          return;
+        }
+        const apiKey = (credentials.keys as JsonObject).apiKey;
+
         const bodyTemplate = (currentAction.metadata as JsonObject)?.body;
         const toTemplate = (currentAction.metadata as JsonObject)?.to;
-
+        const subjectTemplate = (currentAction.metadata as JsonObject)?.subject;
+        const fromTemplate = (currentAction.metadata as JsonObject)?.from;
         if (
           typeof bodyTemplate !== "string" ||
-          typeof toTemplate !== "string"
+          typeof toTemplate !== "string" ||
+          typeof subjectTemplate !== "string" ||
+          typeof fromTemplate !== "string" ||
+          typeof apiKey !== "string"
         ) {
           console.error(
-            "Action metadata missing body/to",
+            "Action metadata missing required fields",
             currentAction.metadata
           );
           return;
         }
         const body = parse(bodyTemplate, workflowRunMetadata);
         const to = parse(toTemplate, workflowRunMetadata);
-        console.log(`Sending email to: ${to}, with the body ${body}`);
+        const subject = parse(subjectTemplate, workflowRunMetadata);
+        const from = parse(fromTemplate, workflowRunMetadata);
+        const emailResponse = await sendEmail(
+          { apiKey },
+          to,
+          subject,
+          body,
+          from
+        );
+
+        if (!emailResponse.success) {
+          console.error("Failed to send email:", emailResponse.error);
+          return;
+        }
+
+        console.log(`Email sent successfully to: ${to}`);
       }
 
       await new Promise((r) => setTimeout(r, 1000));
