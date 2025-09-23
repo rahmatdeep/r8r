@@ -150,6 +150,7 @@ router.put("/workflow/:id", authMiddlware, async (req, res) => {
     });
     return;
   }
+
   const validate = await prisma.workflow.findFirst({
     where: {
       userId: req.id,
@@ -162,60 +163,60 @@ router.put("/workflow/:id", authMiddlware, async (req, res) => {
     });
     return;
   }
+
   try {
-    await prisma.workflow.update({
-      where: {
-        id: workflowId,
-      },
-      data: {
-        title: parsedData.data.title,
-      },
-    });
+    await prisma.$transaction(async (tx) => {
+      await tx.workflow.update({
+        where: { id: workflowId },
+        data: { title: parsedData.data.title },
+      });
 
-    await prisma.trigger.deleteMany({ where: { workflowId } });
-    await prisma.action.deleteMany({ where: { workflowId } });
+      await tx.trigger.deleteMany({ where: { workflowId } });
+      await tx.action.deleteMany({ where: { workflowId } });
 
-    await prisma.trigger.create({
-      data: {
-        availableTriggersId: parsedData.data.availableTriggerId,
-        workflowId,
-      },
-    });
+      await tx.trigger.create({
+        data: {
+          availableTriggersId: parsedData.data.availableTriggerId,
+          workflowId,
+        },
+      });
 
-    await Promise.all(
-            parsedData.data.actions.map((x, index) => {
-        if (x.availableActionId === "email") {
-          const emailMetadataValidation =
-            EmailActionMetadataSchema.safeParse(x.actionMetadata);
-          if (!emailMetadataValidation.success) {
-            throw new Error("Invalid email action metadata");
+      await Promise.all(
+        parsedData.data.actions.map((x, index) => {
+          if (x.availableActionId === "email") {
+            const emailMetadataValidation = EmailActionMetadataSchema.safeParse(
+              x.actionMetadata
+            );
+            if (!emailMetadataValidation.success) {
+              throw new Error("Invalid email action metadata");
+            }
           }
-        }
-      
-        if (x.availableActionId === "telegram") {
-          const telegramMetadataValidation =
-            TelegramActionMetadataSchema.safeParse(x.actionMetadata);
-          if (!telegramMetadataValidation.success) {
-            throw new Error("Invalid telegram action metadata");
+
+          if (x.availableActionId === "telegram") {
+            const telegramMetadataValidation =
+              TelegramActionMetadataSchema.safeParse(x.actionMetadata);
+            if (!telegramMetadataValidation.success) {
+              throw new Error("Invalid telegram action metadata");
+            }
           }
-        }
-      
-        return prisma.action.create({
-          data: {
-            workflowId,
-            availableActionsId: x.availableActionId,
-            sortingOrder: index,
-            metadata: x.actionMetadata,
-          },
-        });
-      })
-    );
+
+          return tx.action.create({
+            data: {
+              workflowId,
+              availableActionsId: x.availableActionId,
+              sortingOrder: index,
+              metadata: x.actionMetadata,
+            },
+          });
+        })
+      );
+    });
 
     res.json({
-      message: "Workflow updated",
+      message: "Workflow updated successfully",
     });
   } catch (e) {
-    console.log(e);
+    console.error("Error updating workflow:", e);
     res.status(500).json({
       message: "Internal Server Error",
     });
