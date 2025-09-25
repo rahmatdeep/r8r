@@ -67,8 +67,9 @@ import {
       const credentials = workflowRunDetails?.workflow.user.Credentials.find(
         (cred) =>
           cred.id ===
-          (currentAction?.metadata as { credentialsId?: string })?.credentialsId
+          (currentAction?.metadata as { credentialId?: string })?.credentialId
       );
+      console.log(credentials);
       if (currentAction.type.id === "email") {
         const apiKey = validateCredentials(credentials, "email");
         if (!apiKey) return;
