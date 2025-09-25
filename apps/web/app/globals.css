@@ -1,50 +1,25 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@import "tailwindcss";
+
+/* Custom minimal scrollbar */
+.custom-minimal-scrollbar::-webkit-scrollbar {
+  width: 4px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.custom-minimal-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+.custom-minimal-scrollbar::-webkit-scrollbar-thumb {
+  background: #4a4945;
+  border-radius: 2px;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
+.custom-minimal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #5a5955;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.imgDark {
-  display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-
-  .imgLight {
-    display: none;
-  }
-  .imgDark {
-    display: unset;
-  }
+/* Firefox */
+.custom-minimal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #4a4945 transparent;
 }
