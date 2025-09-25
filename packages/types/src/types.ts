@@ -88,6 +88,7 @@ export const CredentialDeleteSchema = z.object({
 //ACTION METADATA
 
 export const EmailActionMetadataSchema = z.object({
+  credentialId: z.string(),
   body: z.string(),
   to: z.string(),
   subject: z.string(),
@@ -96,8 +97,9 @@ export const EmailActionMetadataSchema = z.object({
 export type emailMetadataType = z.infer<typeof EmailActionMetadataSchema>;
 
 export const TelegramActionMetadataSchema = z.object({
-  chatId: z.string(), // `chatId` is now part of the metadata
-  message: z.string(), // The message to send
+  credentialId: z.string(),
+  chatId: z.string(),
+  message: z.string(),
 });
 export type telegramMetadataType = z.infer<typeof TelegramActionMetadataSchema>;
 

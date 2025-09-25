@@ -64,10 +64,12 @@ import {
 
       const workflowRunMetadata = workflowRunDetails?.metaData;
 
+      const credentials = workflowRunDetails?.workflow.user.Credentials.find(
+        (cred) =>
+          cred.id ===
+          (currentAction?.metadata as { credentialsId?: string })?.credentialsId
+      );
       if (currentAction.type.id === "email") {
-        const credentials = workflowRunDetails?.workflow.user.Credentials.find(
-          (cred) => cred.platform === "email"
-        );
         const apiKey = validateCredentials(credentials, "email");
         if (!apiKey) return;
 
@@ -102,9 +104,6 @@ import {
       }
 
       if (currentAction.type.id === "telegram") {
-        const credentials = workflowRunDetails?.workflow.user.Credentials.find(
-          (cred) => cred.platform === "telegram"
-        );
         const apiKey = validateCredentials(credentials, "telegram");
         if (!apiKey) return;
 
