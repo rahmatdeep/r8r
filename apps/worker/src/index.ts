@@ -1,13 +1,13 @@
 import { JsonObject, prisma } from "@repo/db";
 import { kafka, TOPIC_NAME } from "@repo/kafka/kafka-client";
 import { parse } from "./utils/parser";
-import { sendEmail } from "./utils/email";
 import { sendTelegramMessage } from "./utils/telegram";
 import {
   validateCredentials,
   validateTelegramMetadata,
   validateEmailMetadata,
 } from "./utils/validate";
+import { processEmail } from "./utils/email";
 
 (async () => {
   const consumer = kafka.consumer({ groupId: "main-worker" });
@@ -71,37 +71,7 @@ import {
       );
       console.log(credentials);
       if (currentAction.type.id === "email") {
-        const apiKey = validateCredentials(credentials, "email");
-        if (!apiKey) return;
-
-        const metadata = validateEmailMetadata(
-          currentAction.metadata as JsonObject
-        );
-        if (!metadata) return;
-
-        const body = parse(metadata.body, workflowRunMetadata);
-        const to = parse(metadata.to, workflowRunMetadata);
-        const subject = parse(metadata.subject, workflowRunMetadata);
-        const from = parse(metadata.from, workflowRunMetadata);
-
-        try {
-          const emailResponse = await sendEmail(
-            { apiKey },
-            to,
-            subject,
-            body,
-            from
-          );
-
-          if (!emailResponse.success) {
-            console.error("Failed to send email:", emailResponse.error);
-            return;
-          }
-
-          console.log(`Email sent successfully to: ${to}`);
-        } catch (error) {
-          console.error("Failed to send email:", error);
-        }
+        await processEmail(credentials, currentAction, workflowRunMetadata);
       }
 
       if (currentAction.type.id === "telegram") {

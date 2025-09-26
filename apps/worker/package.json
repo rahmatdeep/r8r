@@ -19,5 +19,5 @@
   "devDependencies": {
     "@repo/kafka": "workspace:*",
     "@repo/typescript-config": "workspace:*"
-  }
+    }
 }

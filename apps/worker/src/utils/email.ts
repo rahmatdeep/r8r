@@ -1,6 +1,9 @@
 import { Resend } from "resend";
+import { validateCredentials, validateEmailMetadata } from "./validate";
+import { parse } from "./parser";
+import { JsonObject } from "@repo/db";
 
-export async function sendEmail(
+async function sendEmail(
   credentials: { apiKey: string },
   to: string,
   subject: string,
@@ -29,7 +32,7 @@ export async function sendEmail(
       from,
       to,
       subject,
-      html: defaultHtml, 
+      html: defaultHtml,
     });
 
     if (error) {
@@ -42,5 +45,35 @@ export async function sendEmail(
   } catch (err) {
     console.error("Unexpected error:", err);
     return { success: false, error: err };
+  }
+}
+
+export async function processEmail(
+  credentials: any,
+  currentAction: any,
+  workflowRunMetadata: any
+) {
+  const apiKey = validateCredentials(credentials, "email");
+  if (!apiKey) return;
+
+  const metadata = validateEmailMetadata(currentAction.metadata as JsonObject);
+  if (!metadata) return;
+
+  const body = parse(metadata.body, workflowRunMetadata);
+  const to = parse(metadata.to, workflowRunMetadata);
+  const subject = parse(metadata.subject, workflowRunMetadata);
+  const from = parse(metadata.from, workflowRunMetadata);
+
+  try {
+    const emailResponse = await sendEmail({ apiKey }, to, subject, body, from);
+
+    if (!emailResponse.success) {
+      console.error("Failed to send email:", emailResponse.error);
+      return;
+    }
+
+    console.log(`Email sent successfully to: ${to}`);
+  } catch (error) {
+    console.error("Failed to send email:", error);
   }
 }
