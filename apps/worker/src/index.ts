@@ -1,7 +1,7 @@
 import { JsonObject, prisma } from "@repo/db";
 import { kafka, TOPIC_NAME } from "@repo/kafka/kafka-client";
 import { parse } from "./utils/parser";
-import { sendTelegramMessage } from "./utils/telegram";
+import { processTelegram, sendTelegramMessage } from "./utils/telegram";
 import {
   validateCredentials,
   validateTelegramMetadata,
@@ -75,26 +75,7 @@ import { processEmail } from "./utils/email";
       }
 
       if (currentAction.type.id === "telegram") {
-        const apiKey = validateCredentials(credentials, "telegram");
-        if (!apiKey) return;
-
-        const metadata = validateTelegramMetadata(
-          currentAction.metadata as JsonObject
-        );
-        if (!metadata) return;
-
-        const message = parse(metadata.message, workflowRunMetadata);
-
-        try {
-          const telegramResponse = await sendTelegramMessage(
-            apiKey,
-            metadata.chatId,
-            message
-          );
-          console.log("Telegram message sent successfully:", telegramResponse);
-        } catch (error) {
-          console.error("Failed to send telegram message:", error);
-        }
+        await processTelegram(credentials, currentAction, workflowRunMetadata);
       }
 
       await new Promise((r) => setTimeout(r, 1000));
