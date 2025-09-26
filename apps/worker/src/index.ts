@@ -1,12 +1,6 @@
-import { JsonObject, prisma } from "@repo/db";
+import { prisma } from "@repo/db";
 import { kafka, TOPIC_NAME } from "@repo/kafka/kafka-client";
-import { parse } from "./utils/parser";
-import { processTelegram, sendTelegramMessage } from "./utils/telegram";
-import {
-  validateCredentials,
-  validateTelegramMetadata,
-  validateEmailMetadata,
-} from "./utils/validate";
+import { processTelegram } from "./utils/telegram";
 import { processEmail } from "./utils/email";
 
 (async () => {
@@ -69,13 +63,19 @@ import { processEmail } from "./utils/email";
           cred.id ===
           (currentAction?.metadata as { credentialId?: string })?.credentialId
       );
-      console.log(credentials);
-      if (currentAction.type.id === "email") {
-        await processEmail(credentials, currentAction, workflowRunMetadata);
-      }
-
-      if (currentAction.type.id === "telegram") {
-        await processTelegram(credentials, currentAction, workflowRunMetadata);
+      switch (currentAction.type.id) {
+        case "email":
+          await processEmail(credentials, currentAction, workflowRunMetadata);
+          break;
+        case "telegram":
+          await processTelegram(
+            credentials,
+            currentAction,
+            workflowRunMetadata
+          );
+          break;
+        default:
+          console.log("Unknown action selected");
       }
 
       await new Promise((r) => setTimeout(r, 1000));

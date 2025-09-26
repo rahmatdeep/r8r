@@ -2,7 +2,7 @@ import axios from "axios";
 import { validateCredentials, validateTelegramMetadata } from "./validate";
 import { JsonObject } from "@repo/db";
 import { parse } from "./parser";
-export async function sendTelegramMessage(
+async function sendTelegramMessage(
   botToken: string,
   chatId: string,
   message: string
@@ -29,25 +29,29 @@ export async function sendTelegramMessage(
   }
 }
 
-export async function processTelegram(credentials: any, currentAction: any, workflowRunMetadata: any){
+export async function processTelegram(
+  credentials: any,
+  currentAction: any,
+  workflowRunMetadata: any
+) {
   const apiKey = validateCredentials(credentials, "telegram");
-          if (!apiKey) return;
-  
-          const metadata = validateTelegramMetadata(
-            currentAction.metadata as JsonObject
-          );
-          if (!metadata) return;
-  
-          const message = parse(metadata.message, workflowRunMetadata);
-  
-          try {
-            const telegramResponse = await sendTelegramMessage(
-              apiKey,
-              metadata.chatId,
-              message
-            );
-            console.log("Telegram message sent successfully:", telegramResponse);
-          } catch (error) {
-            console.error("Failed to send telegram message:", error);
-          }
+  if (!apiKey) return;
+
+  const metadata = validateTelegramMetadata(
+    currentAction.metadata as JsonObject
+  );
+  if (!metadata) return;
+
+  const message = parse(metadata.message, workflowRunMetadata);
+
+  try {
+    const telegramResponse = await sendTelegramMessage(
+      apiKey,
+      metadata.chatId,
+      message
+    );
+    console.log("Telegram message sent successfully:", telegramResponse);
+  } catch (error) {
+    console.error("Failed to send telegram message:", error);
+  }
 }
