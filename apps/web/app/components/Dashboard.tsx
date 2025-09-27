@@ -10,7 +10,7 @@ import {
   Trash2,
   Key,
   Mail,
-  Twitter,
+  MessageCircle,
 } from "lucide-react";
 import {
   getWorkflows,
@@ -209,15 +209,13 @@ export default function Dashboard({ session }: DashboardProps) {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                      credential.platform === "email"
-                        ? "bg-blue-600"
-                        : "bg-[#0088cc]"
-                    }`}
-                  >
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[#c6613f]">
                     <span className="text-sm font-medium text-white">
-                      {credential.platform === "email" ? <Mail /> : <Twitter />}
+                      {credential.platform === "email" ? (
+                        <Mail />
+                      ) : (
+                        <MessageCircle />
+                      )}
                     </span>
                   </div>
                   <div>

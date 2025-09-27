@@ -80,6 +80,7 @@ export const CredentialCreateSchema = z
       }
     }
   });
+export type credentialCreateType = z.infer<typeof CredentialCreateSchema>;
 
 export const CredentialDeleteSchema = z.object({
   credentialsId: z.string(),

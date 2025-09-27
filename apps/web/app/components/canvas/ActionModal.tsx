@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, Mail, MessageCircle } from "lucide-react";
 import {
   EmailActionMetadataSchema,
   TelegramActionMetadataSchema,
   emailMetadataType,
   telegramMetadataType,
-  emailCredentialsType,
-  telegramCredentialsType,
 } from "@repo/types/types";
 import { CredentialResponse, getCredentials } from "../../utils/api";
 import { AddCredentialModal } from "./AddCredentialModal";
@@ -14,7 +12,10 @@ import { AddCredentialModal } from "./AddCredentialModal";
 interface ActionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (metadata: any) => void;
+  onSave: (metadata: {
+    type: string;
+    data: emailMetadataType | telegramMetadataType;
+  }) => void;
   actionType: string;
   userId?: string;
   existingMetadata?: Record<string, any>;
@@ -36,6 +37,8 @@ export const ActionModal = ({
   useEffect(() => {
     if (isOpen && actionType) {
       loadCredentials();
+
+      console.log("Existing Metadata:", existingMetadata);
 
       // Initialize form data with existing metadata
       setFormData({
@@ -94,10 +97,11 @@ export const ActionModal = ({
     }
 
     try {
-      let validatedData;
+      let validatedData: emailMetadataType | telegramMetadataType;
 
       if (actionType === "email") {
         validatedData = EmailActionMetadataSchema.parse({
+          credentialId: formData.credentialId,
           from: formData.from,
           to: formData.to,
           subject: formData.subject,
@@ -105,17 +109,17 @@ export const ActionModal = ({
         });
       } else if (actionType === "telegram") {
         validatedData = TelegramActionMetadataSchema.parse({
+          credentialId: formData.credentialId,
           chatId: formData.chatId,
           message: formData.message,
         });
+      } else {
+        throw new Error(`Unknown action type: ${actionType}`);
       }
 
       const metadata = {
         type: actionType,
-        data: {
-          ...validatedData,
-          credentialId: formData.credentialId, // Include credential ID
-        },
+        data: validatedData,
       };
 
       onSave(metadata);
@@ -136,9 +140,20 @@ export const ActionModal = ({
     }
   };
 
+  const getIcon = () => {
+    switch (actionType) {
+      case "email":
+        return <Mail className="w-4 h-4 text-[#faf9f5]" />;
+      case "telegram":
+        return <MessageCircle className="w-4 h-4 text-[#faf9f5]" />;
+      default:
+        return <Mail className="w-4 h-4 text-[#faf9f5]" />;
+    }
+  };
+
   const renderCredentialSelect = () => (
     <div>
-      <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+      <label className="block text-sm font-medium text-[#faf9f5] mb-3">
         {actionType === "email" ? "Email Credential" : "Telegram Credential"}
       </label>
       <select
@@ -157,15 +172,20 @@ export const ActionModal = ({
           + Add New Credential
         </option>
       </select>
+      <p className="text-xs text-[#a6a29e] mt-2">
+        Select the credential to use for this {actionType} action
+      </p>
     </div>
   );
+
   const renderEmailFields = () => (
     <>
       <div>
-        <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+        <label className="block text-sm font-medium text-[#faf9f5] mb-3">
           From Email
         </label>
         <input
+          type="email"
           value={formData.from}
           onChange={(e) => handleInputChange("from", e.target.value)}
           className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] placeholder-[#a6a29e] focus:outline-none focus:border-[#c6613f]"
@@ -175,10 +195,11 @@ export const ActionModal = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+        <label className="block text-sm font-medium text-[#faf9f5] mb-3">
           To Email
         </label>
         <input
+          type="email"
           value={formData.to}
           onChange={(e) => handleInputChange("to", e.target.value)}
           className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] placeholder-[#a6a29e] focus:outline-none focus:border-[#c6613f]"
@@ -188,7 +209,7 @@ export const ActionModal = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+        <label className="block text-sm font-medium text-[#faf9f5] mb-3">
           Subject
         </label>
         <input
@@ -202,7 +223,7 @@ export const ActionModal = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+        <label className="block text-sm font-medium text-[#faf9f5] mb-3">
           Message Body
         </label>
         <textarea
@@ -220,7 +241,7 @@ export const ActionModal = ({
   const renderTelegramFields = () => (
     <>
       <div>
-        <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+        <label className="block text-sm font-medium text-[#faf9f5] mb-3">
           Chat ID
         </label>
         <input
@@ -231,10 +252,13 @@ export const ActionModal = ({
           placeholder="Telegram chat ID"
           required
         />
+        <p className="text-xs text-[#a6a29e] mt-2">
+          Enter the chat ID where you want to send the message
+        </p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+        <label className="block text-sm font-medium text-[#faf9f5] mb-3">
           Message
         </label>
         <textarea
@@ -258,7 +282,7 @@ export const ActionModal = ({
           className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           onClick={onClose}
         />
-        <div className="relative bg-[#30302e] rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8">
+        <div className="relative bg-[#30302e] rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-8">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#c6613f] mr-2"></div>
             <span className="text-[#faf9f5]">Loading credentials...</span>
@@ -275,20 +299,25 @@ export const ActionModal = ({
           className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           onClick={onClose}
         />
-        <div className="relative bg-[#30302e] rounded-2xl shadow-2xl w-full max-w-md mx-4">
+        <div className="relative bg-[#30302e] rounded-2xl shadow-2xl w-full max-w-lg mx-4">
           <div className="flex items-center justify-between p-6 border-b border-[#4a4945]">
-            <h2 className="text-xl font-semibold text-[#faf9f5]">
-              {getTitle()}
-            </h2>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#c6613f] rounded-lg flex items-center justify-center">
+                {getIcon()}
+              </div>
+              <h2 className="text-xl font-semibold text-[#faf9f5]">
+                {getTitle()}
+              </h2>
+            </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-[#3a3938] rounded-lg transition-colors"
+              className="p-2 hover:bg-[#3a3938] rounded-lg transition-colors flex items-center justify-center"
             >
               <X className="w-5 h-5 text-[#a6a29e]" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {renderCredentialSelect()}
 
             {actionType === "email" && renderEmailFields()}
@@ -304,9 +333,9 @@ export const ActionModal = ({
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2 bg-[#c6613f] hover:bg-[#b5572e] text-[#faf9f5] rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 bg-[#c6613f] hover:bg-[#b5572e] text-[#faf9f5] rounded-lg transition-colors font-medium shadow-sm hover:shadow-md"
               >
-                Save
+                Save Action
               </button>
             </div>
           </form>

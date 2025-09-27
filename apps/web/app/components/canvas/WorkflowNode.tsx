@@ -1,5 +1,13 @@
 import { Handle, Position } from "@xyflow/react";
-import { Plus, X } from "lucide-react";
+import {
+  Plus,
+  X,
+  Workflow,
+  Mail,
+  MessageCircle,
+  FileText,
+  Webhook,
+} from "lucide-react";
 
 interface WorkflowNodeProps {
   data: {
@@ -14,6 +22,37 @@ interface WorkflowNodeProps {
   };
 }
 
+const getIconForNode = (label: string, type: "trigger" | "action") => {
+  const lowerLabel = label.toLowerCase();
+
+  // Icons for actions
+  if (type === "action") {
+    if (lowerLabel.includes("email") || lowerLabel.includes("mail")) {
+      return <Mail className="w-4 h-4" />;
+    }
+    if (lowerLabel.includes("telegram") || lowerLabel.includes("tg")) {
+      return <MessageCircle className="w-4 h-4" />;
+    }
+    // Default action icon
+    return <Workflow className="w-4 h-4" />;
+  }
+
+  // Icons for triggers
+  if (type === "trigger") {
+    if (lowerLabel.includes("webhook") || lowerLabel.includes("hook")) {
+      return <Webhook className="w-4 h-4" />;
+    }
+    if (lowerLabel.includes("form")) {
+      return <FileText className="w-4 h-4" />;
+    }
+    // Default trigger icon
+    return <Workflow className="w-4 h-4" />;
+  }
+
+  // Fallback
+  return <Workflow className="w-4 h-4" />;
+};
+
 export const WorkflowNode = ({ data }: WorkflowNodeProps) => {
   const bgColor = data.type === "trigger" ? "bg-[#c6613f]" : "bg-[#c6613f]";
 
@@ -23,10 +62,10 @@ export const WorkflowNode = ({ data }: WorkflowNodeProps) => {
         className={`flex items-center gap-2 px-3 py-2 ${bgColor} rounded-lg text-[#faf9f5] shadow-md min-w-[140px] cursor-pointer hover:opacity-90 transition-opacity relative`}
         onClick={data.onNodeClick}
       >
-        <img src={data.image} alt={data.label} className="w-4 h-4 rounded"/>
+        {getIconForNode(data.label, data.type)}
         <span className="font-medium text-sm">{data.label}</span>
 
-        {/* Delete button*/}
+        {/* Delete button */}
         <button
           onClick={(e) => {
             e.stopPropagation();

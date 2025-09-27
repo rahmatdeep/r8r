@@ -1,5 +1,5 @@
 // api.ts - Dummy data for triggers, actions, workflows, credentials, and history
-import { ActionConfig, ActionFormData } from "../types/actions";
+import { ActionFormData } from "../types/actions";
 import axios from "axios";
 import apiClient from "./apiClient";
 
@@ -8,6 +8,8 @@ import {
   CredentialCreateSchema,
   credentialCreateType,
   CredentialDeleteSchema,
+  emailMetadataType,
+  telegramMetadataType,
   //   emailCredentialsType,
   //   telegramCredentialsType,
 } from "@repo/types/types";
@@ -82,7 +84,7 @@ export interface WorkflowAction {
   workflowId: string;
   availableActionsId: string;
   sortingOrder: number;
-  metadata: ActionFormData;
+  metadata: emailMetadataType | telegramMetadataType;
   type: {
     id: string;
     name: string;
