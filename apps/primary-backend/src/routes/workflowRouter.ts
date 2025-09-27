@@ -253,5 +253,27 @@ router.delete("/:id", authMiddlware, async (req, res) => {
     });
   }
 });
+router.get("/status", authMiddlware, async (req, res) => {
+  if (!req.id) {
+    return;
+  }
+  try {
+    const workflowRun = await prisma.workflowRun.findMany({
+      where: {
+        workflow: {
+          userId: req.id,
+        },
+      },
+    });
+    res.json({
+      workflowRun,
+    });
+  } catch (e) {
+    console.error("Error deleting workflow:", e);
+    res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+});
 
 export { router as workflowRouter };
