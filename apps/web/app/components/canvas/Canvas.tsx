@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useTransition } from "react";
 import {
   ReactFlow,
   addEdge,
@@ -37,6 +37,7 @@ import { v4 as uuidv4 } from "uuid";
 import { ActionModal } from "../../components/canvas/ActionModal";
 import { ActionFormData, ActionMetadata } from "../../types/actions";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 interface CanvasProps {
   workflowId?: string;
   session: Session;
@@ -85,6 +86,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
   );
   const [currentActions, setCurrentActions] = useState<AvailableAction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const [currentWorkflowId] = useState(() => workflowId || uuidv4());
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
@@ -443,34 +445,35 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
     }
     return node;
   });
-  const handleSaveWorkflow = async () => {
+  const handleSaveWorkflow = () => {
     if (!currentTrigger || currentActions.length === 0) {
       alert("Please add at least a trigger and one action");
       return;
     }
 
-    try {
-      // Build actions with metadata
-      const actionsWithMetadata = currentActions.map((action, index) => ({
-        type: action,
-        metadata: actionMetadata[index] || {},
-      }));
+    startTransition(async () => {
+      try {
+        const actionsWithMetadata = currentActions.map((action, index) => ({
+          type: action,
+          metadata: actionMetadata[index] || {},
+        }));
 
-      const savedWorkflow = await saveWorkflow(
-        {
-          id: currentWorkflowId,
-          trigger: currentTrigger,
-          actions: actionsWithMetadata,
-          userId: parseInt(session.userId),
-        },
-        workflowId
-      );
+        const savedWorkflow = await saveWorkflow(
+          {
+            id: currentWorkflowId,
+            trigger: currentTrigger,
+            actions: actionsWithMetadata,
+            userId: parseInt(session.userId),
+          },
+          workflowId
+        );
 
-      console.log("Workflow saved successfully:", savedWorkflow);
-      router.push("/");
-    } catch (error) {
-      console.error("Failed to save workflow:", error);
-    }
+        console.log("Workflow saved successfully:", savedWorkflow);
+        router.push("/");
+      } catch (error) {
+        console.error("Failed to save workflow:", error);
+      }
+    });
   };
 
   const createCanvasFromWorkflow = useCallback(
@@ -573,9 +576,19 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
         {currentTrigger && currentActions.length > 0 && (
           <button
             onClick={handleSaveWorkflow}
-            className="bg-[#c6613f] hover:bg-[#b5572e] px-4 py-2 rounded-lg text-[#faf9f5] transition-colors"
+            className="bg-[#c6613f] hover:bg-[#b5572e] px-4 py-2 rounded-lg text-[#faf9f5] transition-colors flex items-center gap-2"
+            disabled={isPending}
           >
-            {workflowId ? "Update Workflow" : "Save Workflow"}
+            {isPending ? (
+              <>
+                <Loader2 className="animate-spin w-4 h-4" />
+                {workflowId ? "Updating..." : "Saving..."}
+              </>
+            ) : workflowId ? (
+              "Update Workflow"
+            ) : (
+              "Save Workflow"
+            )}
           </button>
         )}
       </div>
