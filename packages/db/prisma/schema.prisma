@@ -37,9 +37,9 @@ model Workflow {
 model Trigger {
   id                  String            @id @default(uuid())
   availableTriggersId String
-  type                AvailableTriggers @relation(fields: [availableTriggersId], references: [id])
+  type                AvailableTriggers @relation(fields: [availableTriggersId], references: [id], onDelete: Cascade)
   workflowId          String            @unique
-  workflow            Workflow          @relation(fields: [workflowId], references: [id])
+  workflow            Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   metadata            Json              @default("{}")
 }
 
@@ -53,9 +53,9 @@ model AvailableTriggers {
 model Action {
   id                 String           @id @default(uuid())
   workflowId         String
-  workflow           Workflow         @relation(fields: [workflowId], references: [id])
+  workflow           Workflow         @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   availableActionsId String
-  type               AvailableActions @relation(fields: [availableActionsId], references: [id])
+  type               AvailableActions @relation(fields: [availableActionsId], references: [id], onDelete: Cascade)
   sortingOrder       Int              @default(0)
   metadata           Json             @default("{}")
 }
@@ -71,19 +71,18 @@ model WorkflowRun {
   id                String             @id @default(uuid())
   workflowId        String
   metaData          Json               @default("{}")
-  workflow          Workflow           @relation(fields: [workflowId], references: [id])
+  workflow          Workflow           @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   workflowRunOutBox WorkflowRunOutbox?
   createdAt         DateTime           @default(now())
   status            WorkflowStatus?
   finishedAt        DateTime?
   errorMetadata     Json?
-  
 }
 
 model WorkflowRunOutbox {
   id            String      @id @default(uuid())
   workflowRunId String      @unique
-  workflowRun   WorkflowRun @relation(fields: [workflowRunId], references: [id])
+  workflowRun   WorkflowRun @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
   createdAt     DateTime    @default(now())
 }
 

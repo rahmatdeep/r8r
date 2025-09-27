@@ -222,5 +222,36 @@ router.put("/:id", authMiddlware, async (req, res) => {
     });
   }
 });
+router.delete("/:id", authMiddlware, async (req, res) => {
+  const workflowId = req.params.id;
+
+  try {
+    const validate = await prisma.workflow.findFirst({
+      where: {
+        userId: req.id,
+        id: workflowId,
+      },
+    });
+    if (!validate) {
+      res.status(403).json({
+        message: "This workflow does not belong to this userId",
+      });
+      return;
+    }
+    await prisma.workflow.delete({
+      where: {
+        id: workflowId,
+      },
+    });
+    res.json({
+      message: "Workflow deleted successfully",
+    });
+  } catch (e) {
+    console.error("Error deleting workflow:", e);
+    res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+});
 
 export { router as workflowRouter };
