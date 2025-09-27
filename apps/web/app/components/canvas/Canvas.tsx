@@ -237,7 +237,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
     currentActions.forEach((action, index) => {
       const actionNodeId = index.toString();
       const position = {
-        x: triggerNode.position.x + (index + 1) * 200,
+        x: triggerNode.position.x + (index + 1) * 100,
         y: triggerNode.position.y,
       };
 
@@ -310,7 +310,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
   }, []);
 
   const calculateNewPosition = (sourceNode: Node) => {
-    const offset = 200;
+    const offset = 100;
     return { x: sourceNode.position.x + offset, y: sourceNode.position.y };
   };
 
@@ -510,7 +510,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
       sortedActions.forEach((action, index) => {
         const actionNodeId = index.toString();
         const position = {
-          x: 400 + (index + 1) * 200,
+          x: 400 + (index + 1) * 100,
           y: 300,
         };
 
@@ -554,20 +554,47 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
   return (
     <div className="w-screen h-screen bg-[#262624]">
       {isLoading && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#30302e] p-6 rounded-lg border border-[#4a4945]">
-            <div className="text-[#faf9f5]">Loading workflow...</div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-300">
+          <div className="relative flex flex-col items-center gap-6 bg-[#30302e] px-10 py-8 rounded-3xl border border-[#4a4945] shadow-2xl">
+            {/* Subtle glow effect matching your theme */}
+            <div className="absolute inset-0 rounded-3xl bg-[#c6613f]/5 opacity-60" />
+
+            {/* Enhanced spinner with pulse ring */}
+            <div className="relative">
+              <Loader2 className="w-10 h-10 text-[#c6613f] animate-spin drop-shadow-sm" />
+              <div className="absolute inset-0 w-10 h-10 rounded-full border-2 border-[#c6613f]/20 animate-ping" />
+            </div>
+
+            {/* Loading text with animated dots */}
+            <div className="relative">
+              <div className="text-xl font-semibold text-[#faf9f5] tracking-wide">
+                Loading workflow
+              </div>
+              <div className="flex justify-center mt-3">
+                <div className="flex space-x-1">
+                  <div className="w-1.5 h-1.5 bg-[#c6613f] rounded-full animate-bounce" />
+                  <div
+                    className="w-1.5 h-1.5 bg-[#c6613f] rounded-full animate-bounce"
+                    style={{ animationDelay: "0.1s" }}
+                  />
+                  <div
+                    className="w-1.5 h-1.5 bg-[#c6613f] rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
+
       {/* Header */}
       <div className="absolute top-4 left-4 z-10">
         <Link
           href="/"
-          className="flex items-center gap-2 bg-[#30302e] hover:bg-[#3a3938] px-4 py-2 rounded-lg text-[#faf9f5] transition-colors border border-[#4a4945]"
+          className="flex items-center gap-2 bg-[#30302e] hover:bg-[#3a3938] px-2 py-2 rounded-lg text-[#faf9f5] transition-colors border border-[#4a4945]"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
         </Link>
       </div>
 

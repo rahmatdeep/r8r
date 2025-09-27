@@ -8,6 +8,7 @@ import {
 } from "@repo/types/types";
 import { CredentialResponse, getCredentials } from "../../utils/api";
 import { AddCredentialModal } from "./AddCredentialModal";
+import { getWorkflowIcon } from "../../utils/getWorkflowIcon";
 
 interface ActionModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export const ActionModal = ({
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showAddCredential, setShowAddCredential] = useState(false);
+  const Icon = getWorkflowIcon(actionType, "action");
 
   useEffect(() => {
     if (isOpen && actionType) {
@@ -162,7 +164,9 @@ export const ActionModal = ({
         className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] focus:outline-none focus:border-[#c6613f]"
         required
       >
-        <option value="">Select a credential</option>
+        <option value="" disabled>
+          Select a credential
+        </option>
         {credentials.map((cred) => (
           <option key={cred.id} value={cred.id}>
             {cred.title}
@@ -301,7 +305,7 @@ export const ActionModal = ({
           <div className="flex items-center justify-between p-6 border-b border-[#4a4945]">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-[#c6613f] rounded-lg flex items-center justify-center">
-                {getIcon()}
+                <Icon className="w-4 h-4 text-[#faf9f5]" />
               </div>
               <h2 className="text-xl font-semibold text-[#faf9f5]">
                 {getTitle()}

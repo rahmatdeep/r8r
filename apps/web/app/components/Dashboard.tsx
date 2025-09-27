@@ -11,6 +11,9 @@ import {
   Key,
   Mail,
   MessageCircle,
+  Check,
+  Copy,
+  Link2,
 } from "lucide-react";
 import {
   getWorkflows,
@@ -20,6 +23,7 @@ import {
   deleteCredential,
   getHistory,
   HistoryItem,
+  deleteWorkflow,
 } from "../utils/api";
 import { signOut } from "next-auth/react";
 import { Session } from "next-auth";
@@ -44,6 +48,8 @@ export default function Dashboard({ session }: DashboardProps) {
   const [selectedPlatform, setSelectedPlatform] = useState<
     "email" | "telegram"
   >("email");
+  const [copiedWorkflowId, setCopiedWorkflowId] = useState<string | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -59,6 +65,8 @@ export default function Dashboard({ session }: DashboardProps) {
         getCredentials(),
         getHistory(),
       ]);
+      console.log("workflowsData", workflowsData);
+
       setWorkflows(workflowsData || []);
       setCredentials(credentialsData || []);
       setHistory(historyData || []);
@@ -93,6 +101,28 @@ export default function Dashboard({ session }: DashboardProps) {
     loadData(); // Reload data
   };
 
+  const handleDeleteWorkflow = async (workflowId: string) => {
+    if (confirm("Are you sure you want to delete this workflow?")) {
+      try {
+        await deleteWorkflow(workflowId);
+        await loadData(); // Reload data
+      } catch (error) {
+        console.error("Failed to delete workflow:", error);
+        alert("Failed to delete workflow. Please try again.");
+      }
+    }
+  };
+
+  const handleCopyWebhookUrl = async (url: string, workflowId: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedWorkflowId(workflowId);
+      setTimeout(() => setCopiedWorkflowId(null), 2000);
+    } catch {
+      alert("Failed to copy webhook URL");
+    }
+  };
+
   const renderWorkflowsTab = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-8">
@@ -118,47 +148,80 @@ export default function Dashboard({ session }: DashboardProps) {
           </Link>
         </div>
       ) : (
-        workflows.map((workflow) => (
-          <div
-            key={workflow.id}
-            className="bg-[#30302e] rounded-2xl shadow p-6 border border-[#4a4945]"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {/* <img
-                  src={workflow.trigger.type.image}
-                  alt={workflow.trigger.type.name}
-                  className="w-12 h-12 rounded-lg border border-[#4a4945] object-cover"
-                /> */}
-                <div className="flex flex-col">
-                  <h3 className="font-medium text-lg mb-1">
-                    {workflow.trigger.type.name} Automation
-                  </h3>
-                  <div className="flex items-center gap-3 text-[#a6a29e]">
-                    <span>{workflow.trigger.type.name}</span>
-                    <MoveRight className="w-4 h-4" />
-                    {workflow.action.map((action, index) => (
-                      <span key={action.id} className="flex items-center gap-3">
-                        {action.type.name}
-                        {index < workflow.action.length - 1 && (
-                          <MoveRight className="w-4 h-4" />
-                        )}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
+        workflows.map((workflow) => {
+          const webhookUrl = `${process.env.NEXT_PUBLIC_HOOKS_URL}/hooks/catch/${workflow.userId}/${workflow.id}`;
+          return (
+            <div key={workflow.id} className="relative">
               <Link
                 href={`/canvas/${workflow.id}`}
-                className="group flex items-center gap-2 px-4 py-2 bg-[#c6613f] hover:bg-[#b5572e] text-[#faf9f5] rounded-lg transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                className="block bg-[#30302e] rounded-2xl shadow p-6 border border-[#4a4945] hover:bg-[#3a3938] transition-colors cursor-pointer"
               >
-                <SquarePen className="w-4 h-4" />
-                Edit
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col">
+                      <h3 className="font-medium text-lg mb-1">
+                        {workflow.trigger.type.name} Automation
+                      </h3>
+                      {/* Webhook URL */}
+                      {workflow.trigger?.type?.id === "webhook" && (
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="inline-flex items-center bg-[#232321] border border-[#3a3938] rounded-lg px-2 py-1 text-xs font-mono text-[#faf9f5] shadow-sm">
+                            <Link2 className="w-3 h-3 mr-1 text-[#c6613f]" />
+                            {webhookUrl}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleCopyWebhookUrl(webhookUrl, workflow.id);
+                            }}
+                            className="px-2 py-1 rounded-full bg-[#3a3938] hover:bg-[#4a4945] text-xs text-[#faf9f5] flex items-center gap-1 transition-colors border border-[#4a4945]"
+                          >
+                            {copiedWorkflowId === workflow.id ? (
+                              <>
+                                <Check className="w-3 h-3 text-green-400" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                Copy
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3 text-[#a6a29e]">
+                        <span>{workflow.trigger.type.name}</span>
+                        <MoveRight className="w-4 h-4" />
+                        {workflow.action.map((action, index) => (
+                          <span
+                            key={action.id}
+                            className="flex items-center gap-3"
+                          >
+                            {action.type.name}
+                            {index < workflow.action.length - 1 && (
+                              <MoveRight className="w-4 h-4" />
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </Link>
+              {/* Delete Button */}
+              <button
+                onClick={() => handleDeleteWorkflow(workflow.id)}
+                className="absolute top-4 right-4 p-2 text-[#a6a29e] hover:text-red-400 hover:bg-red-900/10 rounded-lg transition-all duration-200 z-10"
+                title="Delete workflow"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
-          </div>
-        ))
+          );
+        })
       )}
     </div>
   );
@@ -171,18 +234,11 @@ export default function Dashboard({ session }: DashboardProps) {
         </h2>
         <div className="flex gap-2">
           <button
-            onClick={() => handleAddCredential("email")}
+            onClick={() => setShowAddCredential(true)}
             className="bg-[#c6613f] hover:bg-[#b5572e] px-4 py-2 rounded-lg transition-colors text-[#faf9f5] flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Email
-          </button>
-          <button
-            onClick={() => handleAddCredential("telegram")}
-            className="bg-[#c6613f] hover:bg-[#b5572e] px-4 py-2 rounded-lg transition-colors text-[#faf9f5] flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Telegram
+            Add Credential
           </button>
         </div>
       </div>
@@ -256,6 +312,13 @@ export default function Dashboard({ session }: DashboardProps) {
             </div>
           ))}
         </div>
+      )}
+      {/* Add Credential Modal */}
+      {showAddCredential && (
+        <AddCredentialModal
+          onClose={() => setShowAddCredential(false)}
+          onSuccess={handleCredentialAdded}
+        />
       )}
     </div>
   );
@@ -349,14 +412,20 @@ export default function Dashboard({ session }: DashboardProps) {
     return `${year}-${month}-${day}`;
   };
 
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await signOut({ callbackUrl: "/signin" });
+  };
+
   return (
     <div className="min-h-screen bg-[#262624] text-[#faf9f5]">
       {/* Header */}
       <nav className="bg-[#30302e] border-b border-[#4a4945]">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-[#faf9f5]">r8r</h1>
-
+            <h1 className="text-3xl font-bold tracking-tight text-[#faf9f5]">
+              r8r
+            </h1>
             <div className="flex items-center gap-6">
               {/* Primary Action */}
               <Link
@@ -392,11 +461,16 @@ export default function Dashboard({ session }: DashboardProps) {
 
                 {/* Sign Out Button */}
                 <button
-                  onClick={() => signOut({ callbackUrl: "/signin" })}
+                  onClick={handleSignOut}
                   className="p-2 text-[#a6a29e] hover:text-red-400 hover:bg-red-900/10 rounded-lg transition-all duration-200"
                   title="Sign Out"
+                  disabled={signingOut}
                 >
-                  <LogOut className="w-4 h-4" />
+                  {signingOut ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <LogOut className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -467,14 +541,6 @@ export default function Dashboard({ session }: DashboardProps) {
         {activeTab === "credentials" && renderCredentialsTab()}
         {activeTab === "history" && renderHistoryTab()}
       </div>
-      {/* Add Credential Modal */}
-      {showAddCredential && (
-        <AddCredentialModal
-          platform={selectedPlatform}
-          onClose={() => setShowAddCredential(false)}
-          onSuccess={handleCredentialAdded}
-        />
-      )}
     </div>
   );
 }

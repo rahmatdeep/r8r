@@ -280,3 +280,5 @@ export const saveWorkflow = async (
     throw error; // Re-throw so the component can handle it
   }
 };
+
+export function deleteWorkflow(workflowId: string) {}

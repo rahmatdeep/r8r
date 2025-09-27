@@ -1,9 +1,17 @@
-import { X } from "lucide-react";
+import {
+  X,
+  Workflow,
+  Mail,
+  MessageCircle,
+  FileText,
+  Webhook,
+} from "lucide-react";
 import {
   AvailableTrigger,
   AvailableAction,
   WorkflowItemSelectHandler,
 } from "../../utils/api";
+import { getWorkflowIcon } from "../../utils/getWorkflowIcon";
 
 interface WorkflowModalProps {
   isOpen: boolean;
@@ -52,26 +60,27 @@ export const WorkflowModal = ({
                 Triggers
               </h3>
               <div className="space-y-2">
-                {triggers.map((trigger) => (
-                  <button
-                    key={trigger.id}
-                    onClick={() => onSelectItem(trigger, "trigger")}
-                    className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left ${
-                      selectedNodeId === `trigger-${trigger.id}`
-                        ? "bg-[#c6613f] hover:bg-[#b5572e]"
-                        : "bg-[#3a3938] hover:bg-[#4a4945]"
-                    }`}
-                  >
-                    <img
-                      src={trigger.image}
-                      alt={trigger.name}
-                      className="w-8 h-8 rounded"
-                    />
-                    <span className="font-medium text-[#faf9f5]">
-                      {trigger.name}
-                    </span>
-                  </button>
-                ))}
+                {triggers.map((trigger) => {
+                  const Icon = getWorkflowIcon(trigger.name, "trigger");
+                  return (
+                    <button
+                      key={trigger.id}
+                      onClick={() => onSelectItem(trigger, "trigger")}
+                      className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left ${
+                        selectedNodeId === `trigger-${trigger.id}`
+                          ? "bg-[#c6613f] hover:bg-[#b5572e]"
+                          : "bg-[#3a3938] hover:bg-[#4a4945]"
+                      }`}
+                    >
+                      <div className="w-8 h-8 bg-[#c6613f] rounded-lg flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-[#faf9f5]" />
+                      </div>
+                      <span className="font-medium text-[#faf9f5]">
+                        {trigger.name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -83,26 +92,27 @@ export const WorkflowModal = ({
                 Actions
               </h3>
               <div className="space-y-2">
-                {actions.map((action) => (
-                  <button
-                    key={action.id}
-                    onClick={() => onSelectItem(action, "action")}
-                    className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left ${
-                      selectedNodeId === `action-${action.id}`
-                        ? "bg-[#c6613f] hover:bg-[#b5572e]"
-                        : "bg-[#3a3938] hover:bg-[#4a4945]"
-                    }`}
-                  >
-                    <img
-                      src={action.image}
-                      alt={action.name}
-                      className="w-8 h-8 rounded"
-                    />
-                    <span className="font-medium text-[#faf9f5]">
-                      {action.name}
-                    </span>
-                  </button>
-                ))}
+                {actions.map((action) => {
+                  const Icon = getWorkflowIcon(action.name, "action");
+                  return (
+                    <button
+                      key={action.id}
+                      onClick={() => onSelectItem(action, "action")}
+                      className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left ${
+                        selectedNodeId === `action-${action.id}`
+                          ? "bg-[#c6613f] hover:bg-[#b5572e]"
+                          : "bg-[#3a3938] hover:bg-[#4a4945]"
+                      }`}
+                    >
+                      <div className="w-8 h-8 bg-[#c6613f] rounded-lg flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-[#faf9f5]" />
+                      </div>
+                      <span className="font-medium text-[#faf9f5]">
+                        {action.name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
