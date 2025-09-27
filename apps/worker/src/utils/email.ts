@@ -1,5 +1,9 @@
 import { Resend } from "resend";
-import { validateCredentials, validateEmailMetadata } from "./validate";
+import {
+  updateErrorDB,
+  validateCredentials,
+  validateEmailMetadata,
+} from "./validate";
 import { parse } from "./parser";
 import { JsonObject } from "@repo/db";
 
@@ -51,29 +55,52 @@ async function sendEmail(
 export async function processEmail(
   credentials: any,
   currentAction: any,
-  workflowRunMetadata: any
+  workflowRunMetadata: any,
+  workflowRunId: string
 ) {
   const apiKey = validateCredentials(credentials, "email");
-  if (!apiKey) return;
+  if (!apiKey) {
+    await updateErrorDB(
+      workflowRunId,
+      "No email credentials found for the user"
+    );
+    return;
+  }
 
-  const metadata = validateEmailMetadata(currentAction.metadata as JsonObject);
-  if (!metadata) return;
-
-  const body = parse(metadata.body, workflowRunMetadata);
-  const to = parse(metadata.to, workflowRunMetadata);
-  const subject = parse(metadata.subject, workflowRunMetadata);
-  const from = parse(metadata.from, workflowRunMetadata);
+  const metadataResult = validateEmailMetadata(
+    currentAction.metadata as JsonObject
+  );
+  if (!metadataResult.valid) {
+    await updateErrorDB(
+      workflowRunId,
+      `Email Action metadata missing required fields: ${metadataResult.missingFields.join(", ")}`
+    );
+    return;
+  }
+  const body = parse(metadataResult.value.body, workflowRunMetadata);
+  const to = parse(metadataResult.value.to, workflowRunMetadata);
+  const subject = parse(metadataResult.value.subject, workflowRunMetadata);
+  const from = parse(metadataResult.value.from, workflowRunMetadata);
 
   try {
     const emailResponse = await sendEmail({ apiKey }, to, subject, body, from);
 
     if (!emailResponse.success) {
-      console.error("Failed to send email:", emailResponse.error);
+      const errorMsg =
+        emailResponse.error &&
+        typeof emailResponse.error === "object" &&
+        "message" in emailResponse.error
+          ? emailResponse.error.message
+          : String(emailResponse.error);
+
+      console.error("Failed to send email:", errorMsg);
+      await updateErrorDB(workflowRunId, `Failed to send email: ${errorMsg}`);
       return;
     }
 
     console.log(`Email sent successfully to: ${to}`);
   } catch (error) {
     console.error("Failed to send email:", error);
+    await updateErrorDB(workflowRunId, `Failed to send email: ${error}`);
   }
 }

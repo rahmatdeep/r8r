@@ -47,7 +47,9 @@ import { processEmail } from "./utils/email";
           },
         },
       });
-
+      if (workflowRunDetails?.status === "Error") {
+        return;
+      }
       const currentAction = workflowRunDetails?.workflow.action.find(
         (x) => x.sortingOrder === stage
       );
@@ -65,13 +67,19 @@ import { processEmail } from "./utils/email";
       );
       switch (currentAction.type.id) {
         case "email":
-          await processEmail(credentials, currentAction, workflowRunMetadata);
+          await processEmail(
+            credentials,
+            currentAction,
+            workflowRunMetadata,
+            workflowRunId
+          );
           break;
         case "telegram":
           await processTelegram(
             credentials,
             currentAction,
-            workflowRunMetadata
+            workflowRunMetadata,
+            workflowRunId
           );
           break;
         default:
@@ -81,7 +89,18 @@ import { processEmail } from "./utils/email";
       await new Promise((r) => setTimeout(r, 1000));
 
       const lastStage = (workflowRunDetails?.workflow.action.length || 1) - 1;
-      if (lastStage !== stage) {
+
+      const latestRun = await prisma.workflowRun.findUnique({
+        where: { id: workflowRunId },
+        select: { status: true },
+      });
+      if (lastStage === stage && latestRun?.status !== "Error") {
+        await prisma.workflowRun.update({
+          where: { id: workflowRunId },
+          data: { status: "Complete", finishedAt: new Date() },
+        });
+      }
+      if (lastStage !== stage && latestRun?.status !== "Error") {
         await producer.send({
           topic: TOPIC_NAME,
           messages: [

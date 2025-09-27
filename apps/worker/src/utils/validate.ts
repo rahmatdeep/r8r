@@ -1,4 +1,4 @@
-import { JsonObject } from "@repo/db";
+import { JsonObject, prisma } from "@repo/db";
 
 export function validateCredentials(
   credentials: any,
@@ -18,42 +18,77 @@ export function validateCredentials(
   return typeof apiKey === "string" ? apiKey : null;
 }
 
+export type TelegramMetadataValidationResult =
+  | { valid: true; value: { chatId: string; message: string } }
+  | { valid: false; missingFields: string[] };
+
 export function validateTelegramMetadata(
   metadata: any
-): { chatId: string; message: string } | null {
-  const messageTemplate = metadata?.message;
-  const chatId = metadata?.chatId;
+): TelegramMetadataValidationResult {
+  const missingFields: string[] = [];
+  if (typeof metadata?.chatId !== "string") missingFields.push("chatId");
+  if (typeof metadata?.message !== "string") missingFields.push("message");
 
-  if (typeof messageTemplate !== "string" || typeof chatId !== "string") {
-    console.error("Action metadata missing required fields", metadata);
-    return null;
-  }
-
-  return { chatId, message: messageTemplate };
-}
-
-export function validateEmailMetadata(
-  metadata: any
-): { body: string; to: string; subject: string; from: string } | null {
-  const bodyTemplate = metadata?.body;
-  const toTemplate = metadata?.to;
-  const subjectTemplate = metadata?.subject;
-  const fromTemplate = metadata?.from;
-
-  if (
-    typeof bodyTemplate !== "string" ||
-    typeof toTemplate !== "string" ||
-    typeof subjectTemplate !== "string" ||
-    typeof fromTemplate !== "string"
-  ) {
-    console.error("Action metadata missing required fields", metadata);
-    return null;
+  if (missingFields.length > 0) {
+    console.error(
+      `Telegram Action metadata missing required fields: ${missingFields.join(", ")}`
+    );
+    return { valid: false, missingFields };
   }
 
   return {
-    body: bodyTemplate,
-    to: toTemplate,
-    subject: subjectTemplate,
-    from: fromTemplate,
+    valid: true,
+    value: {
+      chatId: metadata.chatId,
+      message: metadata.message,
+    },
   };
+}
+
+export type EmailMetadataValidationResult =
+  | {
+      valid: true;
+      value: { body: string; to: string; subject: string; from: string };
+    }
+  | { valid: false; missingFields: string[] };
+
+export function validateEmailMetadata(
+  metadata: any
+): EmailMetadataValidationResult {
+  const missingFields: string[] = [];
+  if (typeof metadata?.body !== "string") missingFields.push("body");
+  if (typeof metadata?.to !== "string") missingFields.push("to");
+  if (typeof metadata?.subject !== "string") missingFields.push("subject");
+  if (typeof metadata?.from !== "string") missingFields.push("from");
+
+  if (missingFields.length > 0) {
+    console.error(
+      `Email Action metadata missing required fields: ${missingFields.join(", ")}`
+    );
+    return { valid: false, missingFields };
+  }
+
+  return {
+    valid: true,
+    value: {
+      body: metadata.body,
+      to: metadata.to,
+      subject: metadata.subject,
+      from: metadata.from,
+    },
+  };
+}
+
+export async function updateErrorDB(workflowRunId: string, message: string) {
+  await prisma.workflowRun.update({
+    where: {
+      id: workflowRunId,
+    },
+    data: {
+      status: "Error",
+      errorMetadata: {
+        errorMessage: message,
+      },
+    },
+  });
 }

@@ -1,11 +1,16 @@
 import axios from "axios";
-import { validateCredentials, validateTelegramMetadata } from "./validate";
+import {
+  updateErrorDB,
+  validateCredentials,
+  validateTelegramMetadata,
+} from "./validate";
 import { JsonObject } from "@repo/db";
 import { parse } from "./parser";
 async function sendTelegramMessage(
   botToken: string,
   chatId: string,
-  message: string
+  message: string,
+  workflowRunId: string
 ) {
   try {
     const response = await axios.post(
@@ -20,38 +25,58 @@ async function sendTelegramMessage(
         },
       }
     );
-    return response.data;
+    return { success: true, data: response.data };
   } catch (e: any) {
-    console.error(
-      `Error sending telegram message: ${e.response.data || e.message}`
+    const errorMsg =
+      e.response?.data?.description || e.message || "Unknown error";
+    console.error(`Error sending telegram message: ${errorMsg}`);
+    await updateErrorDB(
+      workflowRunId,
+      `Error sending telegram message: ${errorMsg}`
     );
-    throw new Error("Failed to send message");
+    return { success: false, error: errorMsg };
   }
 }
 
 export async function processTelegram(
   credentials: any,
   currentAction: any,
-  workflowRunMetadata: any
+  workflowRunMetadata: any,
+  workflowRunId: string
 ) {
   const apiKey = validateCredentials(credentials, "telegram");
-  if (!apiKey) return;
+  if (!apiKey) {
+    await updateErrorDB(
+      workflowRunId,
+      "No telegram credentials found for the user"
+    );
+    return;
+  }
 
-  const metadata = validateTelegramMetadata(
+  const metadataResult = validateTelegramMetadata(
     currentAction.metadata as JsonObject
   );
-  if (!metadata) return;
-
-  const message = parse(metadata.message, workflowRunMetadata);
-
-  try {
-    const telegramResponse = await sendTelegramMessage(
-      apiKey,
-      metadata.chatId,
-      message
+  if (!metadataResult.valid) {
+    await updateErrorDB(
+      workflowRunId,
+      `Telegram Action metadata missing required fields: ${metadataResult.missingFields.join(
+        ", "
+      )}`
     );
-    console.log("Telegram message sent successfully:", telegramResponse);
-  } catch (error) {
-    console.error("Failed to send telegram message:", error);
+    return;
   }
+  const { chatId, message } = metadataResult.value;
+
+  const telegramResponse = await sendTelegramMessage(
+    apiKey,
+    chatId,
+    parse(message, workflowRunMetadata),
+    workflowRunId
+  );
+
+  if (!telegramResponse?.success) {
+    return;
+  }
+
+  console.log("Telegram message sent successfully:", telegramResponse.data);
 }

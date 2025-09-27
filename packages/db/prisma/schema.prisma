@@ -74,6 +74,10 @@ model WorkflowRun {
   workflow          Workflow           @relation(fields: [workflowId], references: [id])
   workflowRunOutBox WorkflowRunOutbox?
   createdAt         DateTime           @default(now())
+  status            WorkflowStatus?
+  finishedAt        DateTime?
+  errorMetadata     Json?
+  
 }
 
 model WorkflowRunOutbox {
@@ -97,4 +101,9 @@ model Credentials {
 enum Platforms {
   email
   telegram
+}
+
+enum WorkflowStatus {
+  Error
+  Complete
 }
