@@ -24,6 +24,7 @@ import {
 import { signOut } from "next-auth/react";
 import { Session } from "next-auth";
 import { AddCredentialModal } from "../components/canvas/AddCredentialModal";
+import { Loader2 } from "lucide-react";
 
 type TabType = "workflows" | "credentials" | "history";
 
@@ -35,8 +36,11 @@ export default function Dashboard({ session }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>("workflows");
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
-  const [showAddCredential, setShowAddCredential] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [loadingWorkflows, setLoadingWorkflows] = useState(true);
+  const [loadingCredentials, setLoadingCredentials] = useState(true);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [showAddCredential, setShowAddCredential] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<
     "email" | "telegram"
   >("email");
@@ -46,6 +50,9 @@ export default function Dashboard({ session }: DashboardProps) {
   }, [session.userId]);
 
   const loadData = async () => {
+    setLoadingWorkflows(true);
+    setLoadingCredentials(true);
+    setLoadingHistory(true);
     try {
       const [workflowsData, credentialsData, historyData] = await Promise.all([
         getWorkflows(),
@@ -57,6 +64,10 @@ export default function Dashboard({ session }: DashboardProps) {
       setHistory(historyData || []);
     } catch (error) {
       console.error("Failed to load data:", error);
+    } finally {
+      setLoadingWorkflows(false);
+      setLoadingCredentials(false);
+      setLoadingHistory(false);
     }
   };
 
@@ -86,10 +97,12 @@ export default function Dashboard({ session }: DashboardProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-semibold">My Workflows</h2>
-        <span className="text-[#a6a29e]">{workflows?.length} workflows</span>
       </div>
-
-      {workflows.length === 0 ? (
+      {loadingWorkflows ? (
+        <div className="text-center py-12 text-[#a6a29e]">
+          <Spinner text="Loading workflows..." />
+        </div>
+      ) : workflows.length === 0 ? (
         <div className="text-center py-12 text-[#a6a29e]">
           <div className="mb-4">
             <Plus className="w-12 h-12 mx-auto opacity-50" />
@@ -173,8 +186,11 @@ export default function Dashboard({ session }: DashboardProps) {
           </button>
         </div>
       </div>
-
-      {credentials.length === 0 ? (
+      {loadingCredentials ? (
+        <div className="text-center py-12 text-[#a6a29e]">
+          <Spinner text="Loading credentials..." />
+        </div>
+      ) : credentials.length === 0 ? (
         <div className="text-center py-12 text-[#a6a29e]">
           <div className="mb-4">
             <Key className="w-12 h-12 mx-auto opacity-50" />
@@ -249,55 +265,68 @@ export default function Dashboard({ session }: DashboardProps) {
       <h2 className="text-2xl font-semibold text-[#faf9f5]">
         Execution History
       </h2>
-      <div className="space-y-3">
-        {history
-          .sort(
-            (a, b) =>
-              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-          )
-          .map((item) => (
-            <div
-              key={item.id}
-              className="bg-[#30302e] rounded-xl p-4 border border-[#4a4945] hover:bg-[#3a3938] transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="font-medium">{item.workflowName}</h3>
-                  <p className="text-sm text-[#a6a29e]">
-                    {item.triggerName} → {item.actionName}
-                  </p>
-                  {item.errorMessage && (
-                    <p className="text-xs text-red-400 mt-1">
-                      {item.errorMessage}
+      {loadingHistory ? (
+        <div className="text-center py-12 text-[#a6a29e]">
+          <Spinner text="Loading history..." />
+        </div>
+      ) : history.length === 0 ? (
+        <div className="text-center py-12 text-[#a6a29e]">
+          <Clock className="w-12 h-12 mx-auto opacity-50 mb-4" />
+          <h3 className="text-lg font-medium mb-2">No history yet</h3>
+          <p>Workflow runs will appear here.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {history
+            .sort(
+              (a, b) =>
+                new Date(b.timestamp).getTime() -
+                new Date(a.timestamp).getTime()
+            )
+            .map((item) => (
+              <div
+                key={item.id}
+                className="bg-[#30302e] rounded-xl p-4 border border-[#4a4945] hover:bg-[#3a3938] transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-medium">{item.workflowName}</h3>
+                    <p className="text-sm text-[#a6a29e]">
+                      {item.triggerName} → {item.actionName}
                     </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-4">
-                  {item.status !== "running" && item.executionTime > 0 && (
-                    <div className="flex items-center gap-1 text-xs text-[#a6a29e]">
-                      <Clock className="w-3 h-3" />
-                      {item.executionTime}ms
-                    </div>
-                  )}
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      item.status === "success"
-                        ? "bg-green-900 text-green-300"
-                        : item.status === "failed"
-                          ? "bg-red-900 text-red-300"
-                          : "bg-yellow-900 text-yellow-300"
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                  <span className="text-sm text-[#a6a29e]">
-                    {formatRelativeTime(item.timestamp)}
-                  </span>
+                    {item.errorMessage && (
+                      <p className="text-xs text-red-400 mt-1">
+                        {item.errorMessage}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {item.status !== "running" && item.executionTime > 0 && (
+                      <div className="flex items-center gap-1 text-xs text-[#a6a29e]">
+                        <Clock className="w-3 h-3" />
+                        {item.executionTime}ms
+                      </div>
+                    )}
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        item.status === "success"
+                          ? "bg-green-900 text-green-300"
+                          : item.status === "failed"
+                            ? "bg-red-900 text-red-300"
+                            : "bg-yellow-900 text-yellow-300"
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                    <span className="text-sm text-[#a6a29e]">
+                      {formatRelativeTime(item.timestamp)}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-      </div>
+            ))}
+        </div>
+      )}
     </div>
   );
 
@@ -446,6 +475,15 @@ export default function Dashboard({ session }: DashboardProps) {
           onSuccess={handleCredentialAdded}
         />
       )}
+    </div>
+  );
+}
+
+function Spinner({ text = "Loading..." }: { text?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 text-[#a6a29e]">
+      <Loader2 className="animate-spin w-8 h-8 mb-4" />
+      <span>{text}</span>
     </div>
   );
 }

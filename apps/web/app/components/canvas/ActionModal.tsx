@@ -185,7 +185,6 @@ export const ActionModal = ({
           From Email
         </label>
         <input
-          type="email"
           value={formData.from}
           onChange={(e) => handleInputChange("from", e.target.value)}
           className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] placeholder-[#a6a29e] focus:outline-none focus:border-[#c6613f]"
@@ -199,7 +198,6 @@ export const ActionModal = ({
           To Email
         </label>
         <input
-          type="email"
           value={formData.to}
           onChange={(e) => handleInputChange("to", e.target.value)}
           className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] placeholder-[#a6a29e] focus:outline-none focus:border-[#c6613f]"
