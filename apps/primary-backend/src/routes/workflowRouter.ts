@@ -106,6 +106,28 @@ router.get("/", authMiddlware, async (req, res) => {
     });
   }
 });
+router.get("/status", authMiddlware, async (req, res) => {
+  if (!req.id) {
+    return;
+  }
+  try {
+    const workflowRun = await prisma.workflowRun.findMany({
+      where: {
+        workflow: {
+          userId: req.id,
+        },
+      },
+    });
+    res.json({
+      workflowRun,
+    });
+  } catch (e) {
+    console.error("Error deleting workflow:", e);
+    res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+});
 router.get("/:id", authMiddlware, async (req, res) => {
   const workflowId = req.params.id;
 
@@ -173,6 +195,7 @@ router.put("/:id", authMiddlware, async (req, res) => {
 
       await tx.trigger.deleteMany({ where: { workflowId } });
       await tx.action.deleteMany({ where: { workflowId } });
+      await tx.workflowRun.deleteMany({ where: { workflowId } });
 
       await tx.trigger.create({
         data: {
@@ -238,35 +261,12 @@ router.delete("/:id", authMiddlware, async (req, res) => {
       });
       return;
     }
-    await prisma.workflow.delete({
-      where: {
-        id: workflowId,
-      },
-    });
+    await prisma.trigger.deleteMany({ where: { workflowId } });
+    await prisma.action.deleteMany({ where: { workflowId } });
+    await prisma.workflowRun.deleteMany({ where: { workflowId } });
+    await prisma.workflow.delete({ where: { id: workflowId } });
     res.json({
       message: "Workflow deleted successfully",
-    });
-  } catch (e) {
-    console.error("Error deleting workflow:", e);
-    res.status(500).json({
-      message: "Internal Server Error",
-    });
-  }
-});
-router.get("/status", authMiddlware, async (req, res) => {
-  if (!req.id) {
-    return;
-  }
-  try {
-    const workflowRun = await prisma.workflowRun.findMany({
-      where: {
-        workflow: {
-          userId: req.id,
-        },
-      },
-    });
-    res.json({
-      workflowRun,
     });
   } catch (e) {
     console.error("Error deleting workflow:", e);

@@ -21,7 +21,7 @@ import {
   getCredentials,
   CredentialResponse,
   deleteCredential,
-  getHistory,
+  getWorkflowExecutionHistory,
   HistoryItem,
   deleteWorkflow,
 } from "../utils/api";
@@ -50,6 +50,12 @@ export default function Dashboard({ session }: DashboardProps) {
   >("email");
   const [copiedWorkflowId, setCopiedWorkflowId] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const [deletingWorkflowId, setDeletingWorkflowId] = useState<string | null>(
+    null
+  );
+  const [deletingCredentialId, setDeletingCredentialId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     loadData();
@@ -63,10 +69,8 @@ export default function Dashboard({ session }: DashboardProps) {
       const [workflowsData, credentialsData, historyData] = await Promise.all([
         getWorkflows(),
         getCredentials(),
-        getHistory(),
+        getWorkflowExecutionHistory(),
       ]);
-      console.log("workflowsData", workflowsData);
-
       setWorkflows(workflowsData || []);
       setCredentials(credentialsData || []);
       setHistory(historyData || []);
@@ -79,15 +83,28 @@ export default function Dashboard({ session }: DashboardProps) {
     }
   };
 
+  const handleDeleteWorkflow = async (workflowId: string) => {
+    setDeletingWorkflowId(workflowId);
+    try {
+      await deleteWorkflow(workflowId);
+      setWorkflows((prev) => prev.filter((w) => w.id !== workflowId));
+    } catch {
+      alert("Failed to delete workflow.");
+    } finally {
+      setDeletingWorkflowId(null);
+    }
+  };
+
   const handleDeleteCredential = async (credentialId: string) => {
-    if (confirm("Are you sure you want to delete this credential?")) {
-      try {
-        await deleteCredential(credentialId);
-        await loadData(); // Reload data
-      } catch (error) {
-        console.error("Failed to delete credential:", error);
-        alert("Failed to delete credential. Please try again.");
-      }
+    setDeletingCredentialId(credentialId);
+    try {
+      await deleteCredential(credentialId);
+      // Remove from UI after successful delete
+      setCredentials((prev) => prev.filter((c) => c.id !== credentialId));
+    } catch (error) {
+      alert("Failed to delete credential.");
+    } finally {
+      setDeletingCredentialId(null);
     }
   };
 
@@ -99,18 +116,6 @@ export default function Dashboard({ session }: DashboardProps) {
   const handleCredentialAdded = () => {
     setShowAddCredential(false);
     loadData(); // Reload data
-  };
-
-  const handleDeleteWorkflow = async (workflowId: string) => {
-    if (confirm("Are you sure you want to delete this workflow?")) {
-      try {
-        await deleteWorkflow(workflowId);
-        await loadData(); // Reload data
-      } catch (error) {
-        console.error("Failed to delete workflow:", error);
-        alert("Failed to delete workflow. Please try again.");
-      }
-    }
   };
 
   const handleCopyWebhookUrl = async (url: string, workflowId: string) => {
@@ -216,8 +221,13 @@ export default function Dashboard({ session }: DashboardProps) {
                 onClick={() => handleDeleteWorkflow(workflow.id)}
                 className="absolute top-4 right-4 p-2 text-[#a6a29e] hover:text-red-400 hover:bg-red-900/10 rounded-lg transition-all duration-200 z-10"
                 title="Delete workflow"
+                disabled={deletingWorkflowId === workflow.id}
               >
-                <Trash2 className="w-4 h-4" />
+                {deletingWorkflowId === workflow.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
               </button>
             </div>
           );
@@ -304,8 +314,13 @@ export default function Dashboard({ session }: DashboardProps) {
                     onClick={() => handleDeleteCredential(credential.id)}
                     className="p-2 text-[#a6a29e] hover:text-red-400 hover:bg-red-900/10 rounded-lg transition-all duration-200"
                     title="Delete credential"
+                    disabled={deletingCredentialId === credential.id}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {deletingCredentialId === credential.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -343,51 +358,87 @@ export default function Dashboard({ session }: DashboardProps) {
           {history
             .sort(
               (a, b) =>
-                new Date(b.timestamp).getTime() -
-                new Date(a.timestamp).getTime()
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
             )
-            .map((item) => (
-              <div
-                key={item.id}
-                className="bg-[#30302e] rounded-xl p-4 border border-[#4a4945] hover:bg-[#3a3938] transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-medium">{item.workflowName}</h3>
-                    <p className="text-sm text-[#a6a29e]">
-                      {item.triggerName} → {item.actionName}
-                    </p>
-                    {item.errorMessage && (
-                      <p className="text-xs text-red-400 mt-1">
-                        {item.errorMessage}
+            .map((item) => {
+              const executionTime =
+                item.finishedAt && item.createdAt
+                  ? Math.max(
+                      0,
+                      new Date(item.finishedAt).getTime() -
+                        new Date(item.createdAt).getTime()
+                    )
+                  : null;
+              return (
+                <div
+                  key={item.id}
+                  className="bg-[#30302e] rounded-xl p-4 border border-[#4a4945] hover:bg-[#3a3938] transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-[#faf9f5]">
+                        Workflow ID: {item.workflowId}
+                      </h3>
+                      {/* <p className="text-sm text-[#a6a29e]">
+                        To: {item.metaData?.to || "-"}
                       </p>
-                    )}
+                      <p className="text-sm text-[#a6a29e]">
+                        Body: {item.metaData?.body || "-"}
+                      </p> */}
+                    </div>
+                    <div className="flex items-center gap-4">
+                      {executionTime !== null && (
+                        <div className="flex items-center gap-1 text-xs text-[#a6a29e]">
+                          <Clock className="w-3 h-3" />
+                          {executionTime}ms
+                        </div>
+                      )}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          item.status === "Complete"
+                            ? "bg-green-900 text-green-300"
+                            : item.status === "Error"
+                              ? "bg-red-900 text-red-300"
+                              : "bg-yellow-900 text-yellow-300"
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                      <span className="text-sm text-[#a6a29e]">
+                        {formatRelativeTime(item.createdAt)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    {item.status !== "running" && item.executionTime > 0 && (
-                      <div className="flex items-center gap-1 text-xs text-[#a6a29e]">
-                        <Clock className="w-3 h-3" />
-                        {item.executionTime}ms
-                      </div>
-                    )}
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        item.status === "success"
-                          ? "bg-green-900 text-green-300"
-                          : item.status === "failed"
-                            ? "bg-red-900 text-red-300"
-                            : "bg-yellow-900 text-yellow-300"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
-                    <span className="text-sm text-[#a6a29e]">
-                      {formatRelativeTime(item.timestamp)}
-                    </span>
+                  {/* Metadata */}
+                  <div className="mt-2">
+                    <div className="text-xs text-[#a6a29e] mb-1 font-semibold">
+                      Metadata
+                    </div>
+                    <div className="bg-[#232321] rounded px-3 py-2 text-sm font-mono">
+                      {Object.entries(item.metaData || {}).map(
+                        ([key, value]) => (
+                          <div key={key} className="flex gap-2">
+                            <span className="text-[#c6613f]">{key}:</span>
+                            <span className="text-[#faf9f5]">
+                              {String(value)}
+                            </span>
+                          </div>
+                        )
+                      )}
+                      {Object.keys(item.metaData || {}).length === 0 && (
+                        <span className="text-[#a6a29e]">No metadata</span>
+                      )}
+                    </div>
                   </div>
+                  {item.errorMetadata && (
+                    <p className="text-xs text-red-400 mt-1">
+                      {item.errorMetadata.errorMessage}
+                    </p>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       )}
     </div>

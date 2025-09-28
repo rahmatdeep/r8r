@@ -40,8 +40,6 @@ export const ActionModal = ({
     if (isOpen && actionType) {
       loadCredentials();
 
-      console.log("Existing Metadata:", existingMetadata);
-
       // Initialize form data with existing metadata
       setFormData({
         credentialId: existingMetadata.credentialId || "",

@@ -285,8 +285,6 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
 
   const handleActionFormSave = useCallback(
     (metadata: ActionMetadata) => {
-      console.log("Action metadata:", metadata);
-
       if (editingNodeId !== null) {
         // For action nodes, the ID is the index (0, 1, 2, etc.)
         const actionIndex = parseInt(editingNodeId);
@@ -305,7 +303,6 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
     [editingNodeId]
   );
   const handleWebhookFormSave = useCallback((data: { apiUrl: string }) => {
-    console.log("Webhook form data:", data);
     setIsWebhookModalOpen(false);
   }, []);
 
@@ -458,7 +455,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
           metadata: actionMetadata[index] || {},
         }));
 
-        const savedWorkflow = await saveWorkflow(
+        await saveWorkflow(
           {
             id: currentWorkflowId,
             trigger: currentTrigger,
@@ -468,7 +465,6 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
           workflowId
         );
 
-        console.log("Workflow saved successfully:", savedWorkflow);
         router.push("/");
       } catch (error) {
         console.error("Failed to save workflow:", error);
