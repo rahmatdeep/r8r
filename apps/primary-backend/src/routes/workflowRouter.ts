@@ -195,7 +195,6 @@ router.put("/:id", authMiddlware, async (req, res) => {
 
       await tx.trigger.deleteMany({ where: { workflowId } });
       await tx.action.deleteMany({ where: { workflowId } });
-      await tx.workflowRun.deleteMany({ where: { workflowId } });
 
       await tx.trigger.create({
         data: {
