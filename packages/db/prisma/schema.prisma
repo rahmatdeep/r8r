@@ -74,7 +74,7 @@ model WorkflowRun {
   workflow          Workflow           @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   workflowRunOutBox WorkflowRunOutbox?
   createdAt         DateTime           @default(now())
-  status            WorkflowStatus?
+  status            WorkflowStatus?    @default(Pending)
   finishedAt        DateTime?
   errorMetadata     Json?
 }
@@ -105,4 +105,5 @@ enum Platforms {
 enum WorkflowStatus {
   Error
   Complete
+  Pending
 }
