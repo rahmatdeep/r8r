@@ -11,6 +11,9 @@ import {
   Key,
   Mail,
   MessageCircle,
+  Check,
+  Copy,
+  Link2,
 } from "lucide-react";
 import {
   getWorkflows,
@@ -18,8 +21,9 @@ import {
   getCredentials,
   CredentialResponse,
   deleteCredential,
-  getHistory,
+  getWorkflowExecutionHistory,
   HistoryItem,
+  deleteWorkflow,
 } from "../utils/api";
 import { signOut } from "next-auth/react";
 import { Session } from "next-auth";
@@ -44,6 +48,14 @@ export default function Dashboard({ session }: DashboardProps) {
   const [selectedPlatform, setSelectedPlatform] = useState<
     "email" | "telegram"
   >("email");
+  const [copiedWorkflowId, setCopiedWorkflowId] = useState<string | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
+  const [deletingWorkflowId, setDeletingWorkflowId] = useState<string | null>(
+    null
+  );
+  const [deletingCredentialId, setDeletingCredentialId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     loadData();
@@ -57,7 +69,7 @@ export default function Dashboard({ session }: DashboardProps) {
       const [workflowsData, credentialsData, historyData] = await Promise.all([
         getWorkflows(),
         getCredentials(),
-        getHistory(),
+        getWorkflowExecutionHistory(),
       ]);
       setWorkflows(workflowsData || []);
       setCredentials(credentialsData || []);
@@ -71,15 +83,28 @@ export default function Dashboard({ session }: DashboardProps) {
     }
   };
 
+  const handleDeleteWorkflow = async (workflowId: string) => {
+    setDeletingWorkflowId(workflowId);
+    try {
+      await deleteWorkflow(workflowId);
+      setWorkflows((prev) => prev.filter((w) => w.id !== workflowId));
+    } catch {
+      alert("Failed to delete workflow.");
+    } finally {
+      setDeletingWorkflowId(null);
+    }
+  };
+
   const handleDeleteCredential = async (credentialId: string) => {
-    if (confirm("Are you sure you want to delete this credential?")) {
-      try {
-        await deleteCredential(credentialId);
-        await loadData(); // Reload data
-      } catch (error) {
-        console.error("Failed to delete credential:", error);
-        alert("Failed to delete credential. Please try again.");
-      }
+    setDeletingCredentialId(credentialId);
+    try {
+      await deleteCredential(credentialId);
+      // Remove from UI after successful delete
+      setCredentials((prev) => prev.filter((c) => c.id !== credentialId));
+    } catch (error) {
+      alert("Failed to delete credential.");
+    } finally {
+      setDeletingCredentialId(null);
     }
   };
 
@@ -91,6 +116,16 @@ export default function Dashboard({ session }: DashboardProps) {
   const handleCredentialAdded = () => {
     setShowAddCredential(false);
     loadData(); // Reload data
+  };
+
+  const handleCopyWebhookUrl = async (url: string, workflowId: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedWorkflowId(workflowId);
+      setTimeout(() => setCopiedWorkflowId(null), 2000);
+    } catch {
+      alert("Failed to copy webhook URL");
+    }
   };
 
   const renderWorkflowsTab = () => (
@@ -118,47 +153,85 @@ export default function Dashboard({ session }: DashboardProps) {
           </Link>
         </div>
       ) : (
-        workflows.map((workflow) => (
-          <div
-            key={workflow.id}
-            className="bg-[#30302e] rounded-2xl shadow p-6 border border-[#4a4945]"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {/* <img
-                  src={workflow.trigger.type.image}
-                  alt={workflow.trigger.type.name}
-                  className="w-12 h-12 rounded-lg border border-[#4a4945] object-cover"
-                /> */}
-                <div className="flex flex-col">
-                  <h3 className="font-medium text-lg mb-1">
-                    {workflow.trigger.type.name} Automation
-                  </h3>
-                  <div className="flex items-center gap-3 text-[#a6a29e]">
-                    <span>{workflow.trigger.type.name}</span>
-                    <MoveRight className="w-4 h-4" />
-                    {workflow.action.map((action, index) => (
-                      <span key={action.id} className="flex items-center gap-3">
-                        {action.type.name}
-                        {index < workflow.action.length - 1 && (
-                          <MoveRight className="w-4 h-4" />
-                        )}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
+        workflows.map((workflow) => {
+          const webhookUrl = `${process.env.NEXT_PUBLIC_HOOKS_URL}/hooks/catch/${workflow.userId}/${workflow.id}`;
+          return (
+            <div key={workflow.id} className="relative">
               <Link
                 href={`/canvas/${workflow.id}`}
-                className="group flex items-center gap-2 px-4 py-2 bg-[#c6613f] hover:bg-[#b5572e] text-[#faf9f5] rounded-lg transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                className="block bg-[#30302e] rounded-2xl shadow p-6 border border-[#4a4945] hover:bg-[#3a3938] transition-colors cursor-pointer"
               >
-                <SquarePen className="w-4 h-4" />
-                Edit
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col">
+                      <h3 className="font-medium text-lg mb-1">
+                        {workflow.trigger.type.name} Automation
+                      </h3>
+                      {/* Webhook URL */}
+                      {workflow.trigger?.type?.id === "webhook" && (
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="inline-flex items-center bg-[#232321] border border-[#3a3938] rounded-lg px-2 py-1 text-xs font-mono text-[#faf9f5] shadow-sm">
+                            <Link2 className="w-3 h-3 mr-1 text-[#c6613f]" />
+                            {webhookUrl}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleCopyWebhookUrl(webhookUrl, workflow.id);
+                            }}
+                            className="px-2 py-1 rounded-full bg-[#3a3938] hover:bg-[#4a4945] text-xs text-[#faf9f5] flex items-center gap-1 transition-colors border border-[#4a4945]"
+                          >
+                            {copiedWorkflowId === workflow.id ? (
+                              <>
+                                <Check className="w-3 h-3 text-green-400" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                Copy
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3 text-[#a6a29e]">
+                        <span>{workflow.trigger.type.name}</span>
+                        <MoveRight className="w-4 h-4" />
+                        {workflow.action.map((action, index) => (
+                          <span
+                            key={action.id}
+                            className="flex items-center gap-3"
+                          >
+                            {action.type.name}
+                            {index < workflow.action.length - 1 && (
+                              <MoveRight className="w-4 h-4" />
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </Link>
+              {/* Delete Button */}
+              <button
+                onClick={() => handleDeleteWorkflow(workflow.id)}
+                className="absolute top-4 right-4 p-2 text-[#a6a29e] hover:text-red-400 hover:bg-red-900/10 rounded-lg transition-all duration-200 z-10"
+                title="Delete workflow"
+                disabled={deletingWorkflowId === workflow.id}
+              >
+                {deletingWorkflowId === workflow.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+              </button>
             </div>
-          </div>
-        ))
+          );
+        })
       )}
     </div>
   );
@@ -171,18 +244,11 @@ export default function Dashboard({ session }: DashboardProps) {
         </h2>
         <div className="flex gap-2">
           <button
-            onClick={() => handleAddCredential("email")}
+            onClick={() => setShowAddCredential(true)}
             className="bg-[#c6613f] hover:bg-[#b5572e] px-4 py-2 rounded-lg transition-colors text-[#faf9f5] flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Email
-          </button>
-          <button
-            onClick={() => handleAddCredential("telegram")}
-            className="bg-[#c6613f] hover:bg-[#b5572e] px-4 py-2 rounded-lg transition-colors text-[#faf9f5] flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Telegram
+            Add Credential
           </button>
         </div>
       </div>
@@ -248,14 +314,26 @@ export default function Dashboard({ session }: DashboardProps) {
                     onClick={() => handleDeleteCredential(credential.id)}
                     className="p-2 text-[#a6a29e] hover:text-red-400 hover:bg-red-900/10 rounded-lg transition-all duration-200"
                     title="Delete credential"
+                    disabled={deletingCredentialId === credential.id}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {deletingCredentialId === credential.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
+      )}
+      {/* Add Credential Modal */}
+      {showAddCredential && (
+        <AddCredentialModal
+          onClose={() => setShowAddCredential(false)}
+          onSuccess={handleCredentialAdded}
+        />
       )}
     </div>
   );
@@ -280,51 +358,87 @@ export default function Dashboard({ session }: DashboardProps) {
           {history
             .sort(
               (a, b) =>
-                new Date(b.timestamp).getTime() -
-                new Date(a.timestamp).getTime()
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
             )
-            .map((item) => (
-              <div
-                key={item.id}
-                className="bg-[#30302e] rounded-xl p-4 border border-[#4a4945] hover:bg-[#3a3938] transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-medium">{item.workflowName}</h3>
-                    <p className="text-sm text-[#a6a29e]">
-                      {item.triggerName} → {item.actionName}
-                    </p>
-                    {item.errorMessage && (
-                      <p className="text-xs text-red-400 mt-1">
-                        {item.errorMessage}
+            .map((item) => {
+              const executionTime =
+                item.finishedAt && item.createdAt
+                  ? Math.max(
+                      0,
+                      new Date(item.finishedAt).getTime() -
+                        new Date(item.createdAt).getTime()
+                    )
+                  : null;
+              return (
+                <div
+                  key={item.id}
+                  className="bg-[#30302e] rounded-xl p-4 border border-[#4a4945] hover:bg-[#3a3938] transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-[#faf9f5]">
+                        Workflow ID: {item.workflowId}
+                      </h3>
+                      {/* <p className="text-sm text-[#a6a29e]">
+                        To: {item.metaData?.to || "-"}
                       </p>
-                    )}
+                      <p className="text-sm text-[#a6a29e]">
+                        Body: {item.metaData?.body || "-"}
+                      </p> */}
+                    </div>
+                    <div className="flex items-center gap-4">
+                      {executionTime !== null && (
+                        <div className="flex items-center gap-1 text-xs text-[#a6a29e]">
+                          <Clock className="w-3 h-3" />
+                          {executionTime}ms
+                        </div>
+                      )}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          item.status === "Complete"
+                            ? "bg-green-900 text-green-300"
+                            : item.status === "Error"
+                              ? "bg-red-900 text-red-300"
+                              : "bg-yellow-900 text-yellow-300"
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                      <span className="text-sm text-[#a6a29e]">
+                        {formatRelativeTime(item.createdAt)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    {item.status !== "running" && item.executionTime > 0 && (
-                      <div className="flex items-center gap-1 text-xs text-[#a6a29e]">
-                        <Clock className="w-3 h-3" />
-                        {item.executionTime}ms
-                      </div>
-                    )}
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        item.status === "success"
-                          ? "bg-green-900 text-green-300"
-                          : item.status === "failed"
-                            ? "bg-red-900 text-red-300"
-                            : "bg-yellow-900 text-yellow-300"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
-                    <span className="text-sm text-[#a6a29e]">
-                      {formatRelativeTime(item.timestamp)}
-                    </span>
+                  {/* Metadata */}
+                  <div className="mt-2">
+                    <div className="text-xs text-[#a6a29e] mb-1 font-semibold">
+                      Metadata
+                    </div>
+                    <div className="bg-[#232321] rounded px-3 py-2 text-sm font-mono">
+                      {Object.entries(item.metaData || {}).map(
+                        ([key, value]) => (
+                          <div key={key} className="flex gap-2">
+                            <span className="text-[#c6613f]">{key}:</span>
+                            <span className="text-[#faf9f5]">
+                              {String(value)}
+                            </span>
+                          </div>
+                        )
+                      )}
+                      {Object.keys(item.metaData || {}).length === 0 && (
+                        <span className="text-[#a6a29e]">No metadata</span>
+                      )}
+                    </div>
                   </div>
+                  {item.errorMetadata && (
+                    <p className="text-xs text-red-400 mt-1">
+                      {item.errorMetadata.errorMessage}
+                    </p>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       )}
     </div>
@@ -349,14 +463,20 @@ export default function Dashboard({ session }: DashboardProps) {
     return `${year}-${month}-${day}`;
   };
 
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await signOut({ callbackUrl: "/signin" });
+  };
+
   return (
     <div className="min-h-screen bg-[#262624] text-[#faf9f5]">
       {/* Header */}
       <nav className="bg-[#30302e] border-b border-[#4a4945]">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-[#faf9f5]">r8r</h1>
-
+            <h1 className="text-3xl font-bold tracking-tight text-[#faf9f5]">
+              r8r
+            </h1>
             <div className="flex items-center gap-6">
               {/* Primary Action */}
               <Link
@@ -392,11 +512,16 @@ export default function Dashboard({ session }: DashboardProps) {
 
                 {/* Sign Out Button */}
                 <button
-                  onClick={() => signOut({ callbackUrl: "/signin" })}
+                  onClick={handleSignOut}
                   className="p-2 text-[#a6a29e] hover:text-red-400 hover:bg-red-900/10 rounded-lg transition-all duration-200"
                   title="Sign Out"
+                  disabled={signingOut}
                 >
-                  <LogOut className="w-4 h-4" />
+                  {signingOut ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <LogOut className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -467,14 +592,6 @@ export default function Dashboard({ session }: DashboardProps) {
         {activeTab === "credentials" && renderCredentialsTab()}
         {activeTab === "history" && renderHistoryTab()}
       </div>
-      {/* Add Credential Modal */}
-      {showAddCredential && (
-        <AddCredentialModal
-          platform={selectedPlatform}
-          onClose={() => setShowAddCredential(false)}
-          onSuccess={handleCredentialAdded}
-        />
-      )}
     </div>
   );
 }

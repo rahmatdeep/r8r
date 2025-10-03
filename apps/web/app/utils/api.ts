@@ -1,4 +1,3 @@
-// api.ts - Dummy data for triggers, actions, workflows, credentials, and history
 import { ActionFormData } from "../types/actions";
 import axios from "axios";
 import apiClient from "./apiClient";
@@ -10,11 +9,8 @@ import {
   CredentialDeleteSchema,
   emailMetadataType,
   telegramMetadataType,
-  //   emailCredentialsType,
-  //   telegramCredentialsType,
 } from "@repo/types/types";
 
-// export type Credential = emailCredentialsType | telegramCredentialsType;
 
 export interface CredentialResponse {
   id: string;
@@ -106,91 +102,26 @@ export interface Workflow {
   trigger: WorkflowTrigger;
 }
 
-// History interface and mock data
 export interface HistoryItem {
   id: string;
   workflowId: string;
-  workflowName: string;
-  triggerName: string;
-  actionName: string;
-  status: "success" | "failed" | "running";
-  timestamp: string;
-  executionTime: number; // in milliseconds
-  errorMessage?: string;
+  metaData: Record<string, any>;
+  createdAt: string;
+  status: string;
+  finishedAt: string;
+  errorMetadata: any;
 }
 
-export const historyItems: HistoryItem[] = [
-  {
-    id: "hist-004",
-    workflowId: "f68a8406-863e-4104-ad19-6e203f1b1f7b",
-    workflowName: "Webhook to Solana & Email",
-    triggerName: "Webhook",
-    actionName: "Send SOL + Email",
-    status: "running",
-    timestamp: new Date().toISOString(), // Just now
-    executionTime: 0,
-  },
-  {
-    id: "hist-001",
-    workflowId: "f68a8406-863e-4104-ad19-6e203f1b1f7b",
-    workflowName: "Webhook to Solana & Email",
-    triggerName: "Webhook",
-    actionName: "Send SOL + Email",
-    status: "success",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    executionTime: 1250,
-  },
-  {
-    id: "hist-002",
-    workflowId: "f68a8406-863e-4104-ad19-6e203f1b1f7b",
-    workflowName: "Webhook to Solana & Email",
-    triggerName: "Webhook",
-    actionName: "Send SOL + Email",
-    status: "failed",
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
-    executionTime: 800,
-    errorMessage: "Insufficient SOL balance in wallet",
-  },
-  {
-    id: "hist-003",
-    workflowId: "f68a8406-863e-4104-ad19-6e203f1b1f7b",
-    workflowName: "Webhook to Solana & Email",
-    triggerName: "Webhook",
-    actionName: "Send SOL + Email",
-    status: "success",
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    executionTime: 950,
-  },
-  {
-    id: "hist-005",
-    workflowId: "f68a8406-863e-4104-ad19-6e203f1b1f7b",
-    workflowName: "Webhook to Solana & Email",
-    triggerName: "Webhook",
-    actionName: "Send SOL + Email",
-    status: "success",
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    executionTime: 1100,
-  },
-  {
-    id: "hist-006",
-    workflowId: "f68a8406-863e-4104-ad19-6e203f1b1f7b",
-    workflowName: "Webhook to Solana & Email",
-    triggerName: "Webhook",
-    actionName: "Send SOL + Email",
-    status: "success",
-    timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago
-    executionTime: 890,
-  },
-];
+export const getWorkflowExecutionHistory = async () => {
+  try {
+    const response = await apiClient.get("/workflow/status");
 
-export const getHistory = (userId?: number): Promise<HistoryItem[]> =>
-  new Promise((resolve) => {
-    // Just resolve with the dummy data immediately
-    setTimeout(() => {
-      resolve(historyItems);
-    }, 100);
-  });
-
+    return response.data.workflowRun;
+  } catch (error) {
+    console.error("Failed to fetch workflow status:", error);
+    return [];
+  }
+};
 export const getAvailableTriggers = async () => {
   try {
     const response = await axios.get(
@@ -278,5 +209,14 @@ export const saveWorkflow = async (
   } catch (error) {
     console.error("Failed to save workflow:", error);
     throw error; // Re-throw so the component can handle it
+  }
+};
+
+export const deleteWorkflow = async (workflowId: string) => {
+  try {
+    await apiClient.delete(`/workflow/${workflowId}`);
+  } catch (error) {
+    console.error("Failed to delete workflow:", error);
+    throw error;
   }
 };

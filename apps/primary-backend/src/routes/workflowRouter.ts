@@ -118,6 +118,28 @@ router.get("/", authMiddlware, async (req, res) => {
     });
   }
 });
+router.get("/status", authMiddlware, async (req, res) => {
+  if (!req.id) {
+    return;
+  }
+  try {
+    const workflowRun = await prisma.workflowRun.findMany({
+      where: {
+        workflow: {
+          userId: req.id,
+        },
+      },
+    });
+    res.json({
+      workflowRun,
+    });
+  } catch (e) {
+    console.error("Error deleting workflow:", e);
+    res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+});
 router.get("/:id", authMiddlware, async (req, res) => {
   const workflowId = req.params.id;
 
@@ -257,11 +279,10 @@ router.delete("/:id", authMiddlware, async (req, res) => {
       });
       return;
     }
-    await prisma.workflow.delete({
-      where: {
-        id: workflowId,
-      },
-    });
+    await prisma.trigger.deleteMany({ where: { workflowId } });
+    await prisma.action.deleteMany({ where: { workflowId } });
+    await prisma.workflowRun.deleteMany({ where: { workflowId } });
+    await prisma.workflow.delete({ where: { id: workflowId } });
     res.json({
       message: "Workflow deleted successfully",
     });

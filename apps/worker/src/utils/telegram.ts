@@ -69,7 +69,7 @@ export async function processTelegram(
 
   const telegramResponse = await sendTelegramMessage(
     apiKey,
-    chatId,
+    parse(chatId, workflowRunMetadata),
     parse(message, workflowRunMetadata),
     workflowRunId
   );

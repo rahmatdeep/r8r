@@ -1,13 +1,6 @@
 import { Handle, Position } from "@xyflow/react";
-import {
-  Plus,
-  X,
-  Workflow,
-  Mail,
-  MessageCircle,
-  FileText,
-  Webhook,
-} from "lucide-react";
+import { Plus, X } from "lucide-react";
+import { getWorkflowIcon } from "../../utils/getWorkflowIcon";
 
 interface WorkflowNodeProps {
   data: {
@@ -22,48 +15,21 @@ interface WorkflowNodeProps {
   };
 }
 
-const getIconForNode = (label: string, type: "trigger" | "action") => {
-  const lowerLabel = label.toLowerCase();
-
-  // Icons for actions
-  if (type === "action") {
-    if (lowerLabel.includes("email") || lowerLabel.includes("mail")) {
-      return <Mail className="w-4 h-4" />;
-    }
-    if (lowerLabel.includes("telegram") || lowerLabel.includes("tg")) {
-      return <MessageCircle className="w-4 h-4" />;
-    }
-    // Default action icon
-    return <Workflow className="w-4 h-4" />;
-  }
-
-  // Icons for triggers
-  if (type === "trigger") {
-    if (lowerLabel.includes("webhook") || lowerLabel.includes("hook")) {
-      return <Webhook className="w-4 h-4" />;
-    }
-    if (lowerLabel.includes("form")) {
-      return <FileText className="w-4 h-4" />;
-    }
-    // Default trigger icon
-    return <Workflow className="w-4 h-4" />;
-  }
-
-  // Fallback
-  return <Workflow className="w-4 h-4" />;
-};
-
 export const WorkflowNode = ({ data }: WorkflowNodeProps) => {
-  const bgColor = data.type === "trigger" ? "bg-[#c6613f]" : "bg-[#c6613f]";
+  const Icon = getWorkflowIcon(data.label, data.type);
 
   return (
     <div className="relative group flex items-center">
       <div
-        className={`flex items-center gap-2 px-3 py-2 ${bgColor} rounded-lg text-[#faf9f5] shadow-md min-w-[140px] cursor-pointer hover:opacity-90 transition-opacity relative`}
+        className={
+          data.type === "trigger"
+            ? "w-12 h-12 flex items-center justify-center bg-[#c6613f] rounded-full shadow-lg cursor-pointer hover:opacity-90 transition-opacity relative"
+            : "w-12 h-12 flex items-center justify-center bg-[#30302e] rounded-xl shadow-lg cursor-pointer hover:opacity-90 transition-opacity relative border border-[#4a4945]"
+        }
         onClick={data.onNodeClick}
+        title={data.label}
       >
-        {getIconForNode(data.label, data.type)}
-        <span className="font-medium text-sm">{data.label}</span>
+        <Icon className="w-6 h-6 text-[#faf9f5]" />
 
         {/* Delete button */}
         <button
@@ -71,9 +37,9 @@ export const WorkflowNode = ({ data }: WorkflowNodeProps) => {
             e.stopPropagation();
             data.onDeleteClick?.();
           }}
-          className="absolute -top-1 -right-1 w-3 h-3 bg-[#4a4945] hover:bg-[#5a5955] border border-[#6a6965] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#4a4945] hover:bg-[#5a5955] border border-[#6a6965] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          <X className="w-2 h-2 text-[#faf9f5]" />
+          <X className="w-2.5 h-2.5 text-[#faf9f5]" />
         </button>
       </div>
 
@@ -96,14 +62,14 @@ export const WorkflowNode = ({ data }: WorkflowNodeProps) => {
 
       {/* Add button */}
       {data.onAddClick && (
-        <div className="absolute -right-7 top-1/2 -translate-y-1/2 flex items-center">
-          <div className="w-3 h-0.5 bg-[#a6a29e]"></div>
+        <div className="absolute -right-10 top-1/2 -translate-y-1/2 flex items-center">
+          <div className="w-5 h-0.5 bg-[#a6a29e]"></div>
           <button
             onClick={(e) => {
               e.stopPropagation();
               data.onAddClick!();
             }}
-            className="w-4 h-4 bg-[#30302e] hover:bg-[#3a3938] hover:scale-110 border border-[#4a4945] hover:border-[#5a5955] rounded-full flex items-center justify-center transition-all duration-200"
+            className="w-5 h-5 bg-[#30302e] hover:bg-[#3a3938] hover:scale-110 border border-[#4a4945] hover:border-[#5a5955] rounded-full flex items-center justify-center transition-all duration-200"
           >
             <Plus className="w-2 h-2 text-[#faf9f5]" />
           </button>

@@ -4,16 +4,19 @@ import { createCredential } from "../../utils/api";
 import { credentialCreateType } from "@repo/types/types";
 
 interface AddCredentialModalProps {
-  platform: "email" | "telegram";
+  platform?: "email" | "telegram";
   onClose: () => void;
   onSuccess: () => void;
 }
 
 export const AddCredentialModal = ({
-  platform,
+  platform: initialPlatform,
   onClose,
   onSuccess,
 }: AddCredentialModalProps) => {
+  const [platform, setPlatform] = useState<"email" | "telegram" | "">(
+    initialPlatform || ""
+  );
   const [formData, setFormData] = useState({
     title: "",
     apiKey: "",
@@ -22,6 +25,10 @@ export const AddCredentialModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!platform) {
+      alert("Please select a platform");
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -34,7 +41,7 @@ export const AddCredentialModal = ({
       };
 
       await createCredential(credentialData);
-      onSuccess(); // This will reload credentials and close modal
+      onSuccess();
     } catch (error) {
       console.error("Failed to create credential:", error);
       alert("Failed to create credential. Please try again.");
@@ -52,7 +59,7 @@ export const AddCredentialModal = ({
       <div className="relative bg-[#30302e] rounded-2xl shadow-2xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-6 border-b border-[#4a4945]">
           <h2 className="text-xl font-semibold text-[#faf9f5]">
-            Add {platform === "email" ? "Email" : "Telegram"} Credential
+            Add Credential
           </h2>
           <button
             onClick={onClose}
@@ -63,6 +70,29 @@ export const AddCredentialModal = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Platform Selector */}
+          {!initialPlatform && (
+            <div>
+              <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+                Platform
+              </label>
+              <select
+                value={platform}
+                onChange={(e) =>
+                  setPlatform(e.target.value as "email" | "telegram")
+                }
+                className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] focus:outline-none focus:border-[#c6613f]"
+                required
+              >
+                <option value="" disabled>
+                  Select platform
+                </option>
+                <option value="email">Email</option>
+                <option value="telegram">Telegram</option>
+              </select>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-[#faf9f5] mb-2">
               Credential Name
@@ -74,8 +104,9 @@ export const AddCredentialModal = ({
                 setFormData({ ...formData, title: e.target.value })
               }
               className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] placeholder-[#a6a29e] focus:outline-none focus:border-[#c6613f]"
-              placeholder={`My ${platform === "email" ? "Email" : "Telegram"} Account`}
+              placeholder={`My ${platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : ""} Account`}
               required
+              disabled={!platform}
             />
           </div>
 
@@ -90,8 +121,9 @@ export const AddCredentialModal = ({
                 setFormData({ ...formData, apiKey: e.target.value })
               }
               className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] placeholder-[#a6a29e] focus:outline-none focus:border-[#c6613f]"
-              placeholder={`Enter your ${platform} API key`}
+              placeholder={`Enter your ${platform || "platform"} API key`}
               required
+              disabled={!platform}
             />
           </div>
 
@@ -107,7 +139,7 @@ export const AddCredentialModal = ({
             <button
               type="submit"
               className="flex-1 px-4 py-2 bg-[#c6613f] hover:bg-[#b5572e] text-[#faf9f5] rounded-lg transition-colors disabled:opacity-50"
-              disabled={isLoading}
+              disabled={isLoading || !platform}
             >
               {isLoading ? "Adding..." : "Add Credential"}
             </button>
