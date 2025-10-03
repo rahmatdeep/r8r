@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authMiddlware } from "../middleware";
 import {
   EmailActionMetadataSchema,
+  GeminiActionMetadataSchema,
   TelegramActionMetadataSchema,
   WorkflowCreateSchema,
   WorkflowUpdateSchema,
@@ -50,6 +51,17 @@ router.post("/", authMiddlware, async (req, res) => {
                 res.status(400).json({
                   message: "Invalid telegram action metadata",
                   errors: telegramMetadataValidation.error.issues,
+                });
+                throw new Error("Validation failed");
+              }
+            }
+            if (x.availableActionId === "gemini") {
+              const geminiMetadataValidation =
+                GeminiActionMetadataSchema.safeParse(x.actionMetadata);
+              if (!geminiMetadataValidation.success) {
+                res.status(400).json({
+                  message: "Invalid gemini action metadata",
+                  errors: geminiMetadataValidation.error.issues,
                 });
                 throw new Error("Validation failed");
               }
@@ -197,6 +209,13 @@ router.put("/:id", authMiddlware, async (req, res) => {
               TelegramActionMetadataSchema.safeParse(x.actionMetadata);
             if (!telegramMetadataValidation.success) {
               throw new Error("Invalid telegram action metadata");
+            }
+          }
+          if (x.availableActionId === "gemini") {
+            const geminiMetadataValidation =
+              GeminiActionMetadataSchema.safeParse(x.actionMetadata);
+            if (!geminiMetadataValidation.success) {
+              throw new Error("Invalid gemini action metadata");
             }
           }
 

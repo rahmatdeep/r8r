@@ -103,6 +103,11 @@ export const TelegramActionMetadataSchema = z.object({
   message: z.string(),
 });
 export type telegramMetadataType = z.infer<typeof TelegramActionMetadataSchema>;
+export const GeminiActionMetadataSchema = z.object({
+  credentialId: z.string(),
+  message: z.string(),
+});
+export type geminiMetadataType = z.infer<typeof TelegramActionMetadataSchema>;
 
 //CREDENTIALS
 export const EmailCredentialsSchema = z.object({
@@ -120,3 +125,10 @@ export const TelegramCredentialsSchema = z.object({
   }),
 });
 export type telegramCredentialsType = z.infer<typeof TelegramCredentialsSchema>;
+export const GeminiCredentialsSchema = z.object({
+  platform: z.literal("gemini"),
+  keys: z.object({
+    apiKey: z.string(),
+  }),
+});
+export type geminiCredentialsType = z.infer<typeof TelegramCredentialsSchema>;
