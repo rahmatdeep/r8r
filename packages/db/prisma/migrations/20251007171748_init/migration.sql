@@ -1,8 +1,8 @@
 -- CreateEnum
-CREATE TYPE "public"."Platforms" AS ENUM ('email', 'telegram');
+CREATE TYPE "public"."Platforms" AS ENUM ('email', 'telegram', 'gemini');
 
 -- CreateEnum
-CREATE TYPE "public"."WorkflowStatus" AS ENUM ('Error', 'Complete');
+CREATE TYPE "public"."WorkflowStatus" AS ENUM ('Error', 'Complete', 'Pending');
 
 -- CreateTable
 CREATE TABLE "public"."User" (
@@ -69,7 +69,7 @@ CREATE TABLE "public"."WorkflowRun" (
     "workflowId" TEXT NOT NULL,
     "metaData" JSONB NOT NULL DEFAULT '{}',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "status" "public"."WorkflowStatus",
+    "status" "public"."WorkflowStatus" DEFAULT 'Pending',
     "finishedAt" TIMESTAMP(3),
     "errorMetadata" JSONB,
 

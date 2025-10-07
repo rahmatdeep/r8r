@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authMiddlware } from "../middleware";
 import {
   EmailActionMetadataSchema,
+  GeminiActionMetadataSchema,
   TelegramActionMetadataSchema,
   WorkflowCreateSchema,
   WorkflowUpdateSchema,
@@ -50,6 +51,17 @@ router.post("/", authMiddlware, async (req, res) => {
                 res.status(400).json({
                   message: "Invalid telegram action metadata",
                   errors: telegramMetadataValidation.error.issues,
+                });
+                throw new Error("Validation failed");
+              }
+            }
+            if (x.availableActionId === "gemini") {
+              const geminiMetadataValidation =
+                GeminiActionMetadataSchema.safeParse(x.actionMetadata);
+              if (!geminiMetadataValidation.success) {
+                res.status(400).json({
+                  message: "Invalid gemini action metadata",
+                  errors: geminiMetadataValidation.error.issues,
                 });
                 throw new Error("Validation failed");
               }
@@ -203,34 +215,55 @@ router.put("/:id", authMiddlware, async (req, res) => {
         },
       });
 
+      for (const [index, x] of parsedData.data.actions.entries()) {
+        if (x.availableActionId === "email") {
+          const emailMetadataValidation = EmailActionMetadataSchema.safeParse(
+            x.actionMetadata
+          );
+          if (!emailMetadataValidation.success) {
+            res.status(400).json({
+              message: "Invalid email action metadata",
+              errors: emailMetadataValidation.error.issues,
+            });
+            return;
+          }
+        }
+        if (x.availableActionId === "telegram") {
+          const telegramMetadataValidation =
+            TelegramActionMetadataSchema.safeParse(x.actionMetadata);
+          if (!telegramMetadataValidation.success) {
+            res.status(400).json({
+              message: "Invalid telegram action metadata",
+              errors: telegramMetadataValidation.error.issues,
+            });
+            return;
+          }
+        }
+        if (x.availableActionId === "gemini") {
+          const geminiMetadataValidation = GeminiActionMetadataSchema.safeParse(
+            x.actionMetadata
+          );
+          if (!geminiMetadataValidation.success) {
+            res.status(400).json({
+              message: "Invalid gemini action metadata",
+              errors: geminiMetadataValidation.error.issues,
+            });
+            return;
+          }
+        }
+      }
+
       await Promise.all(
-        parsedData.data.actions.map((x, index) => {
-          if (x.availableActionId === "email") {
-            const emailMetadataValidation = EmailActionMetadataSchema.safeParse(
-              x.actionMetadata
-            );
-            if (!emailMetadataValidation.success) {
-              throw new Error("Invalid email action metadata");
-            }
-          }
-
-          if (x.availableActionId === "telegram") {
-            const telegramMetadataValidation =
-              TelegramActionMetadataSchema.safeParse(x.actionMetadata);
-            if (!telegramMetadataValidation.success) {
-              throw new Error("Invalid telegram action metadata");
-            }
-          }
-
-          return tx.action.create({
+        parsedData.data.actions.map((x, index) =>
+          tx.action.create({
             data: {
               workflowId,
               availableActionsId: x.availableActionId,
               sortingOrder: index,
               metadata: x.actionMetadata,
             },
-          });
-        })
+          })
+        )
       );
     });
 

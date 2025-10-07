@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^1.21.0",
     "@repo/db": "workspace:*",
     "axios": "^1.12.2",
     "resend": "^6.1.0"
@@ -19,5 +20,5 @@
   "devDependencies": {
     "@repo/kafka": "workspace:*",
     "@repo/typescript-config": "workspace:*"
-    }
+  }
 }

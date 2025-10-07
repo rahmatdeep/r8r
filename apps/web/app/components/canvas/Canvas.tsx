@@ -38,6 +38,7 @@ import { ActionModal } from "../../components/canvas/ActionModal";
 import { ActionFormData, ActionMetadata } from "../../types/actions";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { FormTriggerModal } from "./FormTriggerModal";
 interface CanvasProps {
   workflowId?: string;
   session: Session;
@@ -64,11 +65,11 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [currentActionType, setCurrentActionType] = useState<string | null>(
     null
   );
-
   const [actionMetadata, setActionMetadata] = useState<
     Record<number, ActionFormData>
   >({});
@@ -87,10 +88,12 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
   const [currentActions, setCurrentActions] = useState<AvailableAction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
-
   const [currentWorkflowId] = useState(() => workflowId || uuidv4());
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [webhookKeys, setWebhookKeys] = useState<string[]>([]);
+  const [formKeys, setFormKeys] = useState<string[]>([]);
   const router = useRouter();
+
   useEffect(() => {
     getAvailableTriggers().then(setTriggers);
     getAvailableActions().then(setActions);
@@ -166,14 +169,22 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
 
   const handleNodeClick = useCallback((nodeId: string, itemName: string) => {
     setEditingNodeId(nodeId);
-
     if (itemName.toLowerCase().includes("email")) {
       setCurrentActionType("email");
       setIsActionModalOpen(true);
     } else if (itemName.toLowerCase().includes("webhook")) {
       setIsWebhookModalOpen(true);
+    } else if (itemName.toLowerCase().includes("form")) {
+      setIsFormModalOpen(true);
     } else if (itemName.toLowerCase().includes("telegram")) {
       setCurrentActionType("telegram");
+      setIsActionModalOpen(true);
+    } else if (itemName.toLowerCase().includes("gemini")) {
+      setCurrentActionType("gemini");
+      setIsActionModalOpen(true);
+    } else {
+      // Default to action modal for other types
+      setCurrentActionType("default");
       setIsActionModalOpen(true);
     }
   }, []);
@@ -223,7 +234,6 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
     [nodes, currentTrigger]
   );
 
-  // Add this helper function
   const rebuildCanvas = useCallback(() => {
     if (!currentTrigger) return;
 
@@ -306,6 +316,12 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
     setIsWebhookModalOpen(false);
   }, []);
 
+  const handleFormTriggerSave = useCallback(
+    (config: { fields: { label: string; type: string }[] }) => {
+      setIsFormModalOpen(false);
+    },
+    []
+  );
   const calculateNewPosition = (sourceNode: Node) => {
     const offset = 100;
     return { x: sourceNode.position.x + offset, y: sourceNode.position.y };
@@ -547,6 +563,14 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
     [handleAddClick, handleNodeClick, handleDeleteNode]
   );
 
+  // Check if any previous action is gemini
+  function hasPreviousGeminiAction(
+    currentIndex: number,
+    actions: AvailableAction[]
+  ) {
+    return actions.slice(0, currentIndex).some((a) => a.id === "gemini");
+  }
+
   return (
     <div className="w-screen h-screen bg-[#262624]">
       {isLoading && (
@@ -667,6 +691,13 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
           userId={session.userId}
           existingMetadata={actionMetadata[parseInt(editingNodeId)] || {}} // Pass metadata for the specific node being edited
           currentNodeId={editingNodeId}
+          webhookKeys={webhookKeys}
+          formKeys={formKeys}
+          geminiResponseKeys={
+            hasPreviousGeminiAction(parseInt(editingNodeId), currentActions)
+              ? ["geminiResponse"]
+              : []
+          }
         />
       )}
 
@@ -676,6 +707,14 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
         onSave={handleWebhookFormSave}
         userId={session.userId}
         workflowId={currentWorkflowId}
+        onWebhookKeys={setWebhookKeys}
+      />
+
+      <FormTriggerModal
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        onSave={handleFormTriggerSave}
+        onFormKeys={setFormKeys}
       />
     </div>
   );

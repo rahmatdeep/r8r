@@ -79,6 +79,34 @@ export function validateEmailMetadata(
   };
 }
 
+export type GeminiMetadataValidationResult =
+  | {
+      valid: true;
+      value: { message: string };
+    }
+  | { valid: false; missingFields: string[] };
+
+export function validateGeminiMetadata(
+  metadata: any
+): GeminiMetadataValidationResult {
+  const missingFields: string[] = [];
+  if (typeof metadata?.message !== "string") missingFields.push("message");
+
+  if (missingFields.length > 0) {
+    console.error(
+      `Gemini Action metadata missing required fields: ${missingFields.join(", ")}`
+    );
+    return { valid: false, missingFields };
+  }
+
+  return {
+    valid: true,
+    value: {
+      message: metadata.message,
+    },
+  };
+}
+
 export async function updateErrorDB(workflowRunId: string, message: string) {
   await prisma.workflowRun.update({
     where: {

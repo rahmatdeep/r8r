@@ -45,7 +45,7 @@ export const WorkflowUpdateSchema = z.object({
 export const CredentialCreateSchema = z
   .object({
     title: z.string(),
-    platform: z.enum(["email", "telegram"]),
+    platform: z.enum(["email", "telegram", "gemini"]),
     keys: z.any(),
   })
   .superRefine((data, ctx) => {
@@ -79,6 +79,21 @@ export const CredentialCreateSchema = z
         });
       }
     }
+    if (data.platform === "gemini") {
+      const telegramKeysValidation = z
+        .object({
+          apiKey: z.string(),
+        })
+        .safeParse(data.keys);
+
+      if (!telegramKeysValidation.success) {
+        ctx.addIssue({
+          path: ["keys"],
+          message: "Invalid keys for gemini platform",
+          code: "custom",
+        });
+      }
+    }
   });
 export type credentialCreateType = z.infer<typeof CredentialCreateSchema>;
 
@@ -103,6 +118,11 @@ export const TelegramActionMetadataSchema = z.object({
   message: z.string(),
 });
 export type telegramMetadataType = z.infer<typeof TelegramActionMetadataSchema>;
+export const GeminiActionMetadataSchema = z.object({
+  credentialId: z.string(),
+  message: z.string(),
+});
+export type geminiMetadataType = z.infer<typeof GeminiActionMetadataSchema>;
 
 //CREDENTIALS
 export const EmailCredentialsSchema = z.object({
@@ -120,3 +140,10 @@ export const TelegramCredentialsSchema = z.object({
   }),
 });
 export type telegramCredentialsType = z.infer<typeof TelegramCredentialsSchema>;
+export const GeminiCredentialsSchema = z.object({
+  platform: z.literal("gemini"),
+  keys: z.object({
+    apiKey: z.string(),
+  }),
+});
+export type geminiCredentialsType = z.infer<typeof TelegramCredentialsSchema>;

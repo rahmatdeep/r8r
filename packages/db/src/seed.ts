@@ -26,6 +26,12 @@ const prismaClient = new PrismaClient();
         image:
           "https://cdn.pixabay.com/photo/2021/12/27/10/50/telegram-6896827_1280.png",
       },
+      {
+        id: "gemini",
+        name: "Gemini",
+        image:
+          "empty",
+      },
     ],
   });
 })();

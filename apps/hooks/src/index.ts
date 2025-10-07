@@ -21,9 +21,8 @@ app.all("/hooks/catch/:userId/:workflowId", async (req, res) => {
   });
 
   if (!exists) {
-    setData(workflowId, body);
-    res.json({
-      message: "Test webhook recieved",
+    res.status(404).json({
+      message: "no such webhook exists",
     });
     return;
   }
@@ -45,6 +44,15 @@ app.all("/hooks/catch/:userId/:workflowId", async (req, res) => {
 
   res.json({
     message: "Webhook recieved",
+  });
+});
+
+app.all("/hooks/test/:userId/:workflowId", async (req, res) => {
+  const { workflowId } = req.params;
+  const { body } = req;
+  setData(workflowId, body);
+  res.json({
+    message: "Test webhook recieved",
   });
 });
 

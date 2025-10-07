@@ -1,11 +1,4 @@
-import {
-  X,
-  Workflow,
-  Mail,
-  MessageCircle,
-  FileText,
-  Webhook,
-} from "lucide-react";
+import { X } from "lucide-react";
 import {
   AvailableTrigger,
   AvailableAction,
