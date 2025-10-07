@@ -146,7 +146,7 @@ export const ActionModal = ({
       } else if (actionType == "gemini") {
         validatedData = GeminiActionMetadataSchema.parse({
           credentialId: formData.credentialId,
-          body: formData.body,
+          message: formData.message,
         });
       } else {
         throw new Error(`Unknown action type: ${actionType}`);
@@ -180,7 +180,13 @@ export const ActionModal = ({
   const renderCredentialSelect = () => (
     <div>
       <label className="block text-sm font-medium text-[#faf9f5] mb-3">
-        {actionType === "email" ? "Email Credential" : "Telegram Credential"}
+        {actionType === "email"
+          ? "Email Credential"
+          : actionType === "telegram"
+            ? "Telegram Credential"
+            : actionType === "gemini"
+              ? "Gemini Credential"
+              : "Credential"}
       </label>
       <select
         value={formData.credentialId}
@@ -456,13 +462,13 @@ export const ActionModal = ({
   const renderGeminiFields = () => (
     <div>
       <label className="block text-sm font-medium text-[#faf9f5] mb-3">
-        Message Body
+        Gemini Prompt
       </label>
       <textarea
-        value={formData.body}
-        onChange={(e) => handleInputChange("body", e.target.value)}
+        value={formData.message}
+        onChange={(e) => handleInputChange("message", e.target.value)}
         className={`w-full px-3 py-2 rounded-lg text-[#faf9f5] placeholder-[#a6a29e] focus:outline-none transition-all resize-none ${
-          dragOverField === "body"
+          dragOverField === "message"
             ? "border-2 border-[#c6613f] ring-2 ring-[#c6613f]/30 bg-[#c6613f]/10"
             : "border border-[#4a4945] focus:border-[#c6613f] bg-[#3a3938]"
         }`}
@@ -478,7 +484,7 @@ export const ActionModal = ({
           const end = textarea.selectionEnd ?? 0;
           const newValue =
             textarea.value.slice(0, start) + value + textarea.value.slice(end);
-          handleInputChange("body", newValue);
+          handleInputChange("message", newValue);
           setTimeout(() => {
             textarea.focus();
             const cursor = start + value.length;
@@ -487,7 +493,7 @@ export const ActionModal = ({
         }}
         onDragOver={(e) => {
           e.preventDefault();
-          setDragOverField("body");
+          setDragOverField("message");
         }}
         onDragLeave={() => setDragOverField(null)}
       />
