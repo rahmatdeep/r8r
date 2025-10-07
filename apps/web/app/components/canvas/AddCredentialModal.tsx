@@ -4,7 +4,7 @@ import { createCredential } from "../../utils/api";
 import { credentialCreateType } from "@repo/types/types";
 
 interface AddCredentialModalProps {
-  platform?: "email" | "telegram";
+  platform?: "email" | "telegram" | "gemini";
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -14,9 +14,9 @@ export const AddCredentialModal = ({
   onClose,
   onSuccess,
 }: AddCredentialModalProps) => {
-  const [platform, setPlatform] = useState<"email" | "telegram" | "">(
-    initialPlatform || ""
-  );
+  const [platform, setPlatform] = useState<
+    "email" | "telegram" | "gemini" | ""
+  >(initialPlatform || "");
   const [formData, setFormData] = useState({
     title: "",
     apiKey: "",
@@ -79,7 +79,7 @@ export const AddCredentialModal = ({
               <select
                 value={platform}
                 onChange={(e) =>
-                  setPlatform(e.target.value as "email" | "telegram")
+                  setPlatform(e.target.value as "email" | "telegram" | "gemini")
                 }
                 className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] focus:outline-none focus:border-[#c6613f]"
                 required
@@ -89,6 +89,7 @@ export const AddCredentialModal = ({
                 </option>
                 <option value="email">Email</option>
                 <option value="telegram">Telegram</option>
+                <option value="gemini">Gemini</option>
               </select>
             </div>
           )}

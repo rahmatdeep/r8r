@@ -39,28 +39,36 @@ export async function processGemini(
 
   const message = parse(metadataResult.value.message, workflowRunMetadata);
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: message,
-    config: {
-      thinkingConfig: {
-        thinkingBudget: 0,
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: message,
+      config: {
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
       },
-    },
-  });
-  console.log(
-    `GEMINI Response: ${response.candidates?.[0]?.content?.parts?.[0]?.text}`
-  );
-  const updatedMetadata = {
-    ...workflowRunMetadata,
-    geminiResponse: response.candidates?.[0]?.content?.parts?.[0]?.text,
-  };
-  await prisma.workflowRun.update({
-    where: {
-      id: workflowRunId,
-    },
-    data: {
-      metaData: updatedMetadata,
-    },
-  });
+    });
+    console.log(
+      `GEMINI Response: ${response.candidates?.[0]?.content?.parts?.[0]?.text}`
+    );
+    const updatedMetadata = {
+      ...workflowRunMetadata,
+      geminiResponse: response.candidates?.[0]?.content?.parts?.[0]?.text,
+    };
+    await prisma.workflowRun.update({
+      where: {
+        id: workflowRunId,
+      },
+      data: {
+        metaData: updatedMetadata,
+      },
+    });
+  } catch (error: any) {
+    console.error("Gemini API error:", error?.message || error);
+    await updateErrorDB(
+      workflowRunId,
+      `Gemini API error: ${error?.message || error}`
+    );
+  }
 }

@@ -6,6 +6,7 @@ interface WebhookTriggerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: { apiUrl: string }) => void;
+  onWebhookKeys: (keys: string[]) => void; // Add this prop
   userId: string;
   workflowId: string;
 }
@@ -14,6 +15,7 @@ export const WebhookTriggerModal = ({
   isOpen,
   onClose,
   onSave,
+  onWebhookKeys, // Destructure the prop
   userId,
   workflowId,
 }: WebhookTriggerModalProps) => {
@@ -23,7 +25,7 @@ export const WebhookTriggerModal = ({
   const [hasSuccessfulResponse, setHasSuccessfulResponse] = useState(false);
 
   // Generate webhook URL
-  const webhookUrl = `${process.env.NEXT_PUBLIC_HOOKS_URL}/hooks/catch/${userId}/${workflowId}`;
+  const webhookUrl = `${process.env.NEXT_PUBLIC_HOOKS_URL}/hooks/test/${userId}/${workflowId}`;
 
   // Reset only certain states when modal opens/closes - keep response if successful
   useEffect(() => {
@@ -65,6 +67,10 @@ export const WebhookTriggerModal = ({
 
       setResponse(JSON.stringify(response.data, null, 2));
       setHasSuccessfulResponse(true); // Mark as successful
+
+      // After a successful response:
+      const keys = Object.keys(response.data); // or Object.keys(JSON.parse(response))
+      onWebhookKeys(keys); // Add this prop/callback
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.code === "ECONNABORTED") {

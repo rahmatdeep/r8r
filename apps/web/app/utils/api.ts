@@ -8,14 +8,14 @@ import {
   credentialCreateType,
   CredentialDeleteSchema,
   emailMetadataType,
+  geminiMetadataType,
   telegramMetadataType,
 } from "@repo/types/types";
-
 
 export interface CredentialResponse {
   id: string;
   title: string;
-  platform: "email" | "telegram";
+  platform: "email" | "telegram" | "gemini";
   keys: {
     apiKey: string;
   };
@@ -80,7 +80,7 @@ export interface WorkflowAction {
   workflowId: string;
   availableActionsId: string;
   sortingOrder: number;
-  metadata: emailMetadataType | telegramMetadataType;
+  metadata: emailMetadataType | telegramMetadataType | geminiMetadataType;
   type: {
     id: string;
     name: string;
@@ -187,6 +187,7 @@ export const saveWorkflow = async (
 
     if (existingWorkflowId) {
       // Update existing workflow
+      console.log(payload);
       await apiClient.put(`workflow/${existingWorkflowId}`, payload);
 
       // Fetch and return the updated workflow

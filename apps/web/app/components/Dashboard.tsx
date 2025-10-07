@@ -29,6 +29,7 @@ import { signOut } from "next-auth/react";
 import { Session } from "next-auth";
 import { AddCredentialModal } from "../components/canvas/AddCredentialModal";
 import { Loader2 } from "lucide-react";
+import { getWorkflowIcon } from "../utils/getWorkflowIcon";
 
 type TabType = "workflows" | "credentials" | "history";
 
@@ -46,7 +47,7 @@ export default function Dashboard({ session }: DashboardProps) {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [showAddCredential, setShowAddCredential] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<
-    "email" | "telegram"
+    "email" | "telegram" | "gemini"
   >("email");
   const [copiedWorkflowId, setCopiedWorkflowId] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
@@ -265,67 +266,48 @@ export default function Dashboard({ session }: DashboardProps) {
             No credentials stored yet
           </h3>
           <p className="mb-6">Add credentials to connect your accounts</p>
-          <div className="flex gap-2 justify-center">
-            <button
-              onClick={() => handleAddCredential("email")}
-              className="inline-flex items-center gap-2 bg-[#c6613f] hover:bg-[#b5572e] px-4 py-2 rounded-lg font-medium transition-colors text-[#faf9f5]"
-            >
-              <Plus className="w-4 h-4" />
-              Add Email Credential
-            </button>
-            <button
-              onClick={() => handleAddCredential("telegram")}
-              className="inline-flex items-center gap-2 bg-[#c6613f] hover:bg-[#b5572e] px-4 py-2 rounded-lg font-medium transition-colors text-[#faf9f5]"
-            >
-              <Plus className="w-4 h-4" />
-              Add Telegram Credential
-            </button>
-          </div>
         </div>
       ) : (
         <div className="grid gap-4">
-          {credentials.map((credential) => (
-            <div
-              key={credential.id}
-              className="bg-[#30302e] rounded-xl p-4 border border-[#4a4945] hover:bg-[#3a3938] transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[#c6613f]">
-                    <span className="text-sm font-medium text-white">
-                      {credential.platform === "email" ? (
-                        <Mail />
+          {credentials.map((credential) => {
+            const Icon = getWorkflowIcon(credential.platform, "action");
+            return (
+              <div
+                key={credential.id}
+                className="bg-[#30302e] rounded-xl p-4 border border-[#4a4945] hover:bg-[#3a3938] transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[#c6613f]">
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-[#faf9f5]">
+                        {credential.title}
+                      </h3>
+                      <p className="text-sm text-[#a6a29e] capitalize">
+                        {credential.platform}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleDeleteCredential(credential.id)}
+                      className="p-2 text-[#a6a29e] hover:text-red-400 hover:bg-red-900/10 rounded-lg transition-all duration-200"
+                      title="Delete credential"
+                      disabled={deletingCredentialId === credential.id}
+                    >
+                      {deletingCredentialId === credential.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <MessageCircle />
+                        <Trash2 className="w-4 h-4" />
                       )}
-                    </span>
+                    </button>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-[#faf9f5]">
-                      {credential.title}
-                    </h3>
-                    <p className="text-sm text-[#a6a29e] capitalize">
-                      {credential.platform}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleDeleteCredential(credential.id)}
-                    className="p-2 text-[#a6a29e] hover:text-red-400 hover:bg-red-900/10 rounded-lg transition-all duration-200"
-                    title="Delete credential"
-                    disabled={deletingCredentialId === credential.id}
-                  >
-                    {deletingCredentialId === credential.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       {/* Add Credential Modal */}
