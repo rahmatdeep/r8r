@@ -167,25 +167,31 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
     setIsModalOpen(true);
   }, []);
 
-  const handleNodeClick = useCallback((nodeId: string, itemName: string) => {
+  const handleNodeClick = useCallback((nodeId: string, itemId: string) => {
     setEditingNodeId(nodeId);
-    if (itemName.toLowerCase().includes("email")) {
-      setCurrentActionType("email");
-      setIsActionModalOpen(true);
-    } else if (itemName.toLowerCase().includes("webhook")) {
-      setIsWebhookModalOpen(true);
-    } else if (itemName.toLowerCase().includes("form")) {
-      setIsFormModalOpen(true);
-    } else if (itemName.toLowerCase().includes("telegram")) {
-      setCurrentActionType("telegram");
-      setIsActionModalOpen(true);
-    } else if (itemName.toLowerCase().includes("gemini")) {
-      setCurrentActionType("gemini");
-      setIsActionModalOpen(true);
-    } else {
-      // Default to action modal for other types
-      setCurrentActionType("default");
-      setIsActionModalOpen(true);
+    switch (itemId) {
+      case "email":
+        setCurrentActionType("email");
+        setIsActionModalOpen(true);
+        break;
+      case "webhook":
+        setIsWebhookModalOpen(true);
+        break;
+      case "form":
+        setIsFormModalOpen(true);
+        break;
+      case "telegram":
+        setCurrentActionType("telegram");
+        setIsActionModalOpen(true);
+        break;
+      case "gemini":
+        setCurrentActionType("gemini");
+        setIsActionModalOpen(true);
+        break;
+      default:
+        setCurrentActionType("default");
+        setIsActionModalOpen(true);
+        break;
     }
   }, []);
   const handleDeleteNode = useCallback(
@@ -260,7 +266,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
           image: action.image,
           type: "action",
           onAddClick: () => handleAddClick(actionNodeId),
-          onNodeClick: () => handleNodeClick(actionNodeId, action.name),
+          onNodeClick: () => handleNodeClick(actionNodeId, action.id),
           onDeleteClick: () => handleDeleteNode(actionNodeId),
           hasConnectedActions: index < currentActions.length - 1,
           isFirstNode: false,
@@ -369,7 +375,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
             image: item.image,
             type: type,
             onAddClick: () => handleAddClick(newNodeId),
-            onNodeClick: () => handleNodeClick(newNodeId, item.name),
+            onNodeClick: () => handleNodeClick(newNodeId, item.id),
             onDeleteClick: () => handleDeleteNode(newNodeId),
             hasConnectedActions: false,
             isFirstNode: true,
@@ -394,7 +400,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
             image: item.image,
             type: type,
             onAddClick: () => handleAddClick(newNodeId),
-            onNodeClick: () => handleNodeClick(newNodeId, item.name),
+            onNodeClick: () => handleNodeClick(newNodeId, item.id),
             onDeleteClick: () => handleDeleteNode(newNodeId),
             hasConnectedActions: false,
             isFirstNode: false,
@@ -419,6 +425,26 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
       }
       setIsModalOpen(false);
       setCurrentAddContext({});
+      switch (item.id) {
+        case "webhook":
+          if (type === "trigger") setIsWebhookModalOpen(true);
+          break;
+        case "form":
+          if (type === "trigger") setIsFormModalOpen(true);
+          break;
+        case "email":
+        case "telegram":
+        case "gemini":
+          setCurrentActionType(item.id);
+          setEditingNodeId(newNodeId);
+          setIsActionModalOpen(true);
+          break;
+        default:
+          setCurrentActionType("default");
+          setEditingNodeId(newNodeId);
+          setIsActionModalOpen(true);
+          break;
+      }
     },
     [
       currentAddContext,
@@ -504,7 +530,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
           type: "trigger",
           onAddClick: () => handleAddClick("trigger-1"),
           onNodeClick: () =>
-            handleNodeClick("trigger-1", workflow.trigger.type.name),
+            handleNodeClick("trigger-1", workflow.trigger.type.id),
           onDeleteClick: () => handleDeleteNode("trigger-1"),
           hasConnectedActions: workflow.action.length > 0,
           isFirstNode: true,
@@ -535,7 +561,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
             image: action.type.image,
             type: "action",
             onAddClick: () => handleAddClick(actionNodeId),
-            onNodeClick: () => handleNodeClick(actionNodeId, action.type.name),
+            onNodeClick: () => handleNodeClick(actionNodeId, action.type.id),
             onDeleteClick: () => handleDeleteNode(actionNodeId),
             hasConnectedActions: index < sortedActions.length - 1,
             isFirstNode: false,
