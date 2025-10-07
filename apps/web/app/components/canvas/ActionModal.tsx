@@ -579,82 +579,82 @@ export const ActionModal = ({
         />
       )}
 
-      {/* Sidebar Overlay */}
-      {actionType !== "gemini" &&
-        (webhookKeys?.length > 0 ||
-          geminiResponseKeys?.length > 0 ||
-          formKeys?.length > 0) && (
-          <div className="fixed left-0 top-0 h-full w-64 bg-[#232321] border-l border-[#4a4945] shadow-lg z-50 flex flex-col p-6">
-            {webhookKeys?.length > 0 && (
-              <>
-                <h3 className="text-lg font-semibold text-[#faf9f5] mb-2">
-                  Webhook Keys
-                </h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {webhookKeys.map((key) => (
-                    <div
-                      key={key}
-                      className="px-3 py-1 bg-[#30302e] rounded-lg text-[#c6613f] text-sm font-mono cursor-grab"
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData("text/plain", `{${key}}`);
-                      }}
-                    >
-                      {key}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-            {geminiResponseKeys?.length > 0 && (
-              <>
-                <h3 className="text-lg font-semibold text-[#faf9f5] mb-2">
-                  Gemini Response Keys
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {geminiResponseKeys.map((key) => (
-                    <div
-                      key={key}
-                      className="px-3 py-1 bg-[#30302e] rounded-lg text-[#3fc661] text-sm font-mono cursor-grab"
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData("text/plain", `{${key}}`);
-                      }}
-                    >
-                      {key}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-            {formKeys?.length > 0 && (
-              <>
-                <h3 className="text-lg font-semibold text-[#faf9f5] mb-2">
-                  Form Keys
-                </h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {formKeys.map((key) => (
-                    <div
-                      key={key}
-                      className="px-3 py-1 bg-[#30302e] rounded-lg text-[#3fc661] text-sm font-mono cursor-grab"
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData("text/plain", `{${key}}`);
-                      }}
-                    >
-                      {key}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
+      {/* Key Sidebar */}
+      {(webhookKeys?.length > 0 ||
+        geminiResponseKeys?.length > 0 ||
+        formKeys?.length > 0) && (
+        <div className="fixed left-0 top-0 h-full w-64 bg-[#232321] border-l border-[#4a4945] shadow-lg z-50 flex flex-col p-6">
+          {webhookKeys?.length > 0 && (
+            <>
+              <h3 className="text-lg font-semibold text-[#faf9f5] mb-2">
+                Webhook Keys
+              </h3>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {webhookKeys.map((key) => (
+                  <div
+                    key={key}
+                    className="px-3 py-1 bg-[#30302e] rounded-lg text-[#c6613f] text-sm font-mono cursor-grab"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("text/plain", `{${key}}`);
+                    }}
+                  >
+                    {key}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          {/* Only show Gemini keys if not in Gemini action modal */}
+          {actionType !== "gemini" && geminiResponseKeys?.length > 0 && (
+            <>
+              <h3 className="text-lg font-semibold text-[#faf9f5] mb-2">
+                Gemini Response Keys
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {geminiResponseKeys.map((key) => (
+                  <div
+                    key={key}
+                    className="px-3 py-1 bg-[#30302e] rounded-lg text-[#3fc661] text-sm font-mono cursor-grab"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("text/plain", `{${key}}`);
+                    }}
+                  >
+                    {key}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          {formKeys?.length > 0 && (
+            <>
+              <h3 className="text-lg font-semibold text-[#faf9f5] mb-2">
+                Form Keys
+              </h3>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {formKeys.map((key) => (
+                  <div
+                    key={key}
+                    className="px-3 py-1 bg-[#30302e] rounded-lg text-[#3fc661] text-sm font-mono cursor-grab"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("text/plain", `{${key}}`);
+                    }}
+                  >
+                    {key}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
-            <p className="mt-4 text-xs text-[#a6a29e]">
-              Drag a key into any input field to use
-              <span className="font-mono">{`{key}`}</span> in your action.
-            </p>
-          </div>
-        )}
+          <p className="mt-4 text-xs text-[#a6a29e]">
+            Drag a key into any input field to use
+            <span className="font-mono">{`{key}`}</span> in your action.
+          </p>
+        </div>
+      )}
     </>
   );
 };
