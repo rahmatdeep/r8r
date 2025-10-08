@@ -120,3 +120,30 @@ export async function updateErrorDB(workflowRunId: string, message: string) {
     },
   });
 }
+
+export type GmailCredentialsValidationResult =
+  | { valid: true; value: { user: string; pass: string } }
+  | { valid: false; missingFields: string[] };
+
+export function validateGmailCredentials(
+  credentials: any
+): GmailCredentialsValidationResult {
+  const missingFields: string[] = [];
+  if (typeof credentials?.user !== "string") missingFields.push("user");
+  if (typeof credentials?.pass !== "string") missingFields.push("pass");
+
+  if (missingFields.length > 0) {
+    console.error(
+      `Gmail credentials missing required fields: ${missingFields.join(", ")}`
+    );
+    return { valid: false, missingFields };
+  }
+
+  return {
+    valid: true,
+    value: {
+      user: credentials.user,
+      pass: credentials.pass,
+    },
+  };
+}

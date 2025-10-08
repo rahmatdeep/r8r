@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/utils/email.ts","./src/utils/gemini.ts","./src/utils/parser.ts","./src/utils/telegram.ts","./src/utils/validate.ts"],"version":"5.9.2"}
+{"root":["./src/index.ts","./src/utils/email.ts","./src/utils/gemini.ts","./src/utils/parser.ts","./src/utils/smtp-email.ts","./src/utils/telegram.ts","./src/utils/validate.ts"],"version":"5.9.2"}
