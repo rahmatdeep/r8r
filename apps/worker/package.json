@@ -15,10 +15,12 @@
     "@google/genai": "^1.21.0",
     "@repo/db": "workspace:*",
     "axios": "^1.12.2",
+    "nodemailer": "^7.0.9",
     "resend": "^6.1.0"
   },
   "devDependencies": {
     "@repo/kafka": "workspace:*",
-    "@repo/typescript-config": "workspace:*"
+    "@repo/typescript-config": "workspace:*",
+    "@types/nodemailer": "^7.0.2"
   }
 }

@@ -101,6 +101,13 @@ export const CredentialDeleteSchema = z.object({
   credentialsId: z.string(),
 });
 
+export const GmailCredentialCreateSchema = z.object({
+  user: z.string(),
+  pass: z.string(),
+});
+
+export type gmailCredentialType = z.infer<typeof GmailCredentialCreateSchema>;
+
 //ACTION METADATA
 
 export const EmailActionMetadataSchema = z.object({
