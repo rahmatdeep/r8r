@@ -3,13 +3,20 @@ import "dotenv/config";
 const prismaClient = new PrismaClient();
 
 (async () => {
-  await prismaClient.availableTriggers.create({
-    data: {
-      id: "webhook",
-      name: "Webhook",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQ1br_iLWHygV0qvoSqHxdotYCI-vLaR4owg&s",
-    },
+  await prismaClient.availableTriggers.createMany({
+    data: [
+      {
+        id: "webhook",
+        name: "Webhook",
+        image:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQ1br_iLWHygV0qvoSqHxdotYCI-vLaR4owg&s",
+      },
+      {
+        id: "form",
+        name: "Form",
+        image: "",
+      },
+    ],
   });
 
   await prismaClient.availableActions.createMany({
@@ -29,8 +36,7 @@ const prismaClient = new PrismaClient();
       {
         id: "gemini",
         name: "Gemini",
-        image:
-          "empty",
+        image: "empty",
       },
     ],
   });
