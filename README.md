@@ -56,7 +56,7 @@ Copy `.env.example` files in each app/package to `.env` and fill in required sec
 ```sh
 cd packages/db
 pnpm prisma migrate dev
-pnpm run seed
+pnpm prisma db seed
 ```
 
 ### 4. **Run All Services**
