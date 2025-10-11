@@ -1,135 +1,142 @@
-# Turborepo starter
+# r8r
 
-This Turborepo starter is maintained by the Turborepo core team.
+**r8r** is an open-source, extensible workflow automation platform inspired by [n8n](https://n8n.io/).  
+It lets you visually create, connect, and automate workflows using triggers (like webhooks) and actions (like sending emails, Telegram messages, or calling Gemini AI).  
+Built as a modern monorepo with TypeScript, Next.js, Prisma, and a modular backend architecture.
 
-## Using this example
 
-Run the following command:
+
+## Features
+
+- **Visual Workflow Builder:** Drag-and-drop UI for creating and connecting triggers and actions.
+- **Triggers:** Webhook.
+- **Multiple Actions:** Email, Telegram, Gemini AI, and extensible support for more.
+- **Dynamic Data Mapping:** Use outputs from triggers/actions as inputs for subsequent steps (with drag-and-drop sidebar).
+- **Credential Management:** Securely store and manage credentials for each integration.
+- **Modular Monorepo:** Clean separation of backend, frontend, types, and utilities.
+- **TypeScript-first:** End-to-end type safety.
+- **Prisma ORM:** Robust, type-safe database access.
+- **TurboRepo:** Fast, scalable monorepo tooling.
+
+
+## Monorepo Structure
+
+```
+apps/
+  hooks/               # Webhook receiver & processor
+  primary-backend/     # Main API backend (Express)
+  processor/           # Workflow execution engine
+  web/                 # Next.js frontend (React)
+  worker/              # Action workers (email, telegram, gemini, etc.)
+
+packages/
+  db/                  # Prisma schema, migrations, and DB client
+  eslint-config/       # Shared ESLint config
+  kafka/               # Kafka integration (optional)
+  types/               # Shared TypeScript types
+  typescript-config/   # Shared tsconfig
+```
+
+## Quick Start
+
+### 1. **Clone and Install**
 
 ```sh
-npx create-turbo@latest
+git clone https://github.com/yourusername/r8r.git
+cd r8r
+pnpm install
 ```
 
-## What's inside?
+### 2. **Setup Environment**
 
-This Turborepo includes the following packages/apps:
+Copy `.env.example` files in each app/package to `.env` and fill in required secrets (DB, SMTP, Telegram, Gemini, etc).
 
-### Apps and Packages
+### 3. **Database Setup**
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```sh
+cd packages/db
+pnpm prisma migrate dev
+pnpm run seed
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### 4. **Run All Services**
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+From the root:
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+```sh
+pnpm dev
 ```
 
-### Develop
+Or run each service individually:
 
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+```sh
+pnpm --filter web dev
+pnpm --filter primary-backend dev
+pnpm --filter hooks dev
+pnpm --filter processor dev
+pnpm --filter worker dev
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+## Usage
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+1. Visit `http://localhost:3000` to access the web UI.
+2. Sign up and start building workflows visually.
+3. Add triggers (webhook) and actions (email, telegram, gemini).
+4. Configure credentials as needed.
+5. Use the sidebar to drag output keys from triggers/actions into action inputs.
 
-### Remote Caching
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## Key Concepts
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+### Triggers
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+- **Webhook**: Receive HTTP requests to start workflows.
 
-```
-cd my-turborepo
+### Actions
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+- **Email**: Send emails using configured credentials.
+- **Telegram**: Send Telegram messages.
+- **Gemini**: Call Gemini AI APIs.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+### Credentials
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+- Securely store API keys, tokens, etc. for each integration.
+- Add/manage credentials in the UI.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+### Dynamic Data Mapping
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+- Use outputs from any previous step as inputs for later steps.
+- Drag-and-drop keys from the sidebar into action fields.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
 
-## Useful Links
+## Extending r8r
 
-Learn more about the power of Turborepo:
+### Add new triggers/actions:
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+Implement a new backend route and UI modal, update types, and add to the workflow builder.
+
+### Add new credential types:
+
+Update the Prisma schema, backend, and credential modal.
+
+### Add new sidebar key sources:
+
+Pass new keys to the sidebar via the workflow context.
+
+
+## Tech Stack
+
+- **Frontend**: Next.js (React, TypeScript, Tailwind CSS)
+- **Backend**: Express (TypeScript)
+- **Database**: PostgreSQL (via Prisma ORM)
+- **Monorepo**: TurboRepo, pnpm
+- **Workers**: Node.js (for async action processing)
+- **UI**: Lucide icons, custom React components
+
+
+## Development
+
+- All packages/apps use TypeScript and share types via `packages/types`.
+- Linting and formatting via shared ESLint and Prettier configs.
+- Use `pnpm dev` to run all apps in dev mode.
