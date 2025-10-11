@@ -39,6 +39,7 @@ import { ActionFormData, ActionMetadata } from "../../types/actions";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { FormTriggerModal } from "./FormTriggerModal";
+
 interface CanvasProps {
   workflowId?: string;
   session: Session;
@@ -93,6 +94,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
   const [webhookKeys, setWebhookKeys] = useState<string[]>([]);
   const [formKeys, setFormKeys] = useState<string[]>([]);
   const router = useRouter();
+  const [triggerMetadata, setTriggerMetadata] = useState<any>({});
 
   useEffect(() => {
     getAvailableTriggers().then(setTriggers);
@@ -110,8 +112,9 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
       const workflow = await getWorkflowById(workflowId);
 
       if (workflow) {
-        // Set the trigger
+        // Set the trigger and its metadata
         setCurrentTrigger(workflow.trigger.type);
+        setTriggerMetadata(workflow.trigger.metadata || {});
 
         // Set the actions (sorted by sortingOrder)
         const sortedActions = (workflow.action as WorkflowAction[]).sort(
@@ -323,11 +326,13 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
   }, []);
 
   const handleFormTriggerSave = useCallback(
-    (config: { fields: { label: string; type: string }[] }) => {
+    (config: { fields: { label: string; type: string }[]; title?: string }) => {
+      setTriggerMetadata(config);
       setIsFormModalOpen(false);
     },
     []
   );
+
   const calculateNewPosition = (sourceNode: Node) => {
     const offset = 100;
     return { x: sourceNode.position.x + offset, y: sourceNode.position.y };
@@ -497,17 +502,20 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
           metadata: actionMetadata[index] || {},
         }));
 
-        await saveWorkflow(
+        const workflow = await saveWorkflow(
           {
             id: currentWorkflowId,
-            trigger: currentTrigger,
+            trigger: {
+              ...currentTrigger,
+              metadata: triggerMetadata, // <-- Pass the trigger metadata here!
+            },
             actions: actionsWithMetadata,
             userId: parseInt(session.userId),
           },
           workflowId
         );
-
         router.push("/");
+        console.log("Workflow saved successfully", workflow);
       } catch (error) {
         console.error("Failed to save workflow:", error);
       }
@@ -741,6 +749,9 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
         onClose={() => setIsFormModalOpen(false)}
         onSave={handleFormTriggerSave}
         onFormKeys={setFormKeys}
+        userId={session.userId}
+        workflowId={currentWorkflowId}
+        initialFields={triggerMetadata?.fields || []}
       />
     </div>
   );

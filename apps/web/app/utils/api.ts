@@ -65,6 +65,7 @@ export interface WorkflowItem {
   id: string;
   name: string;
   image: string;
+  metadata?: { fields?: { label: string; type: string }[] } | null;
 }
 
 export type AvailableTrigger = WorkflowItem;
@@ -179,6 +180,7 @@ export const saveWorkflow = async (
       id: workflowData.id,
       title: "My Workflow", // You can make this dynamic later
       availableTriggerId: workflowData.trigger.id,
+      triggerMetadata: workflowData.trigger.metadata || {},
       actions: workflowData.actions.map((action) => ({
         availableActionId: action.type.id,
         actionMetadata: action.metadata,
@@ -218,6 +220,25 @@ export const deleteWorkflow = async (workflowId: string) => {
     await apiClient.delete(`/workflow/${workflowId}`);
   } catch (error) {
     console.error("Failed to delete workflow:", error);
+    throw error;
+  }
+};
+
+export const triggerWebhookManually = async (
+  userId: string,
+  workflowId: string,
+  payload: any
+) => {
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_HOOKS_URL}/hooks/catch/${userId}/${workflowId}`,
+      payload
+    );
+    console.log("Webhook triggered successfully:", response.data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Failed to trigger webhook:", error);
     throw error;
   }
 };

@@ -1,21 +1,18 @@
-import { useState } from "react";
-import { X, Plus, Trash2 } from "lucide-react";
-
-// Utility to convert label to camelCase
-function toCamelCase(label: string) {
-  return label
-    .replace(/[^a-zA-Z0-9 ]/g, "")
-    .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) =>
-      index === 0 ? word.toLowerCase() : word.toUpperCase()
-    )
-    .replace(/\s+/g, "");
-}
+import { useEffect, useState } from "react";
+import { X, Plus, Trash2, Check, Copy } from "lucide-react";
+import { toCamelCase } from "../../utils/toCamelCase";
 
 interface FormTriggerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (config: { fields: { label: string; type: string }[] }) => void;
+  onSave: (config: {
+    fields: { label: string; type: string }[];
+    title?: string;
+  }) => void;
   onFormKeys: (keys: string[]) => void;
+  userId: string;
+  workflowId: string;
+  initialFields?: Field[];
 }
 interface Field {
   label: string;
@@ -27,8 +24,31 @@ export function FormTriggerModal({
   onClose,
   onSave,
   onFormKeys,
+  userId,
+  workflowId,
+  initialFields = [],
 }: FormTriggerModalProps) {
   const [fields, setFields] = useState<Field[]>([]);
+  const formUrl = `${window.location.origin}/forms/${userId}/${workflowId}`;
+  const [formTitle, setFormTitle] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFields(initialFields);
+      setCopied(false);
+    }
+  }, [isOpen, initialFields]);
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(formUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy URL:", error);
+    }
+  };
 
   const addField = () => setFields([...fields, { label: "", type: "text" }]);
   const updateField = (idx: number, key: keyof Field, value: string) => {
@@ -40,7 +60,7 @@ export function FormTriggerModal({
   const handleSave = () => {
     const keys = fields.map((f) => toCamelCase(f.label)).filter(Boolean);
     onFormKeys(keys);
-    onSave({ fields });
+    onSave({ fields, title: formTitle });
     onClose();
   };
 
@@ -59,6 +79,47 @@ export function FormTriggerModal({
           >
             <X className="w-5 h-5 text-[#a6a29e]" />
           </button>
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+            Public Form Link
+          </label>
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              value={formUrl}
+              readOnly
+              className="flex-1 px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] text-sm font-mono"
+            />
+            <button
+              type="button"
+              onClick={handleCopyUrl}
+              className="px-4 py-2 bg-[#4a4945] hover:bg-[#5a5955] text-[#faf9f5] rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
+            >
+              {copied ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
+              {copied ? "Copied!" : "Copy"}
+            </button>
+          </div>
+          <p className="text-xs text-[#a6a29e] mt-2">
+            Share this link to let anyone fill the form and trigger the
+            workflow.
+          </p>
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+            Form Title (optional)
+          </label>
+          <input
+            type="text"
+            value={formTitle}
+            onChange={(e) => setFormTitle(e.target.value)}
+            placeholder="e.g. Contact Us"
+            className="w-full px-3 py-2 rounded-lg bg-[#3a3938] border border-[#4a4945] text-[#faf9f5]"
+          />
         </div>
         <div className="space-y-4">
           {fields.map((field, idx) => (

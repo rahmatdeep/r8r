@@ -198,6 +198,40 @@ export default function Dashboard({ session }: DashboardProps) {
                           </button>
                         </div>
                       )}
+                      {/* Form URL */}
+                      {workflow.trigger?.type?.id === "form" && (
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="inline-flex items-center bg-[#232321] border border-[#3a3938] rounded-lg px-2 py-1 text-xs font-mono text-[#faf9f5] shadow-sm">
+                            <Link2 className="w-3 h-3 mr-1 text-[#c6613f]" />
+                            {`${window.location.origin}/forms/${workflow.userId}/${workflow.id}`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              await navigator.clipboard.writeText(
+                                `${window.location.origin}/forms/${workflow.userId}/${workflow.id}`
+                              );
+                              setCopiedWorkflowId(workflow.id + "-form");
+                              setTimeout(() => setCopiedWorkflowId(null), 2000);
+                            }}
+                            className="px-2 py-1 rounded-full bg-[#3a3938] hover:bg-[#4a4945] text-xs text-[#faf9f5] flex items-center gap-1 transition-colors border border-[#4a4945]"
+                          >
+                            {copiedWorkflowId === workflow.id + "-form" ? (
+                              <>
+                                <Check className="w-3 h-3 text-green-400" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                Copy
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
                       <div className="flex items-center gap-3 text-[#a6a29e]">
                         <span>{workflow.trigger.type.name}</span>
                         <MoveRight className="w-4 h-4" />

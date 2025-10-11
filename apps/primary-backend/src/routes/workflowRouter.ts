@@ -29,6 +29,7 @@ router.post("/", authMiddlware, async (req, res) => {
         trigger: {
           create: {
             availableTriggersId: parsedData.data.availableTriggerId,
+            metadata: parsedData.data.triggerMetadata || {},
           },
         },
         action: {
@@ -212,6 +213,7 @@ router.put("/:id", authMiddlware, async (req, res) => {
         data: {
           availableTriggersId: parsedData.data.availableTriggerId,
           workflowId,
+          metadata: parsedData.data.triggerMetadata || {},
         },
       });
 
