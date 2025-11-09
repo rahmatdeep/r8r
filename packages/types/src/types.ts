@@ -45,7 +45,7 @@ export const WorkflowUpdateSchema = z.object({
 export const CredentialCreateSchema = z
   .object({
     title: z.string(),
-    platform: z.enum(["email", "telegram", "gemini"]),
+    platform: z.enum(["email", "telegram", "gemini", "gmail"]),
     keys: z.any(),
   })
   .superRefine((data, ctx) => {
@@ -94,6 +94,22 @@ export const CredentialCreateSchema = z
         });
       }
     }
+    if (data.platform === "gmail") {
+      const gmailKeysValidation = z
+        .object({
+          user: z.string(),
+          pass: z.string(),
+        })
+        .safeParse(data.keys);
+
+      if (!gmailKeysValidation.success) {
+        ctx.addIssue({
+          path: ["keys"],
+          message: "Invalid keys for gmail platform",
+          code: "custom",
+        });
+      }
+    }
   });
 export type credentialCreateType = z.infer<typeof CredentialCreateSchema>;
 
@@ -101,12 +117,15 @@ export const CredentialDeleteSchema = z.object({
   credentialsId: z.string(),
 });
 
-export const GmailCredentialCreateSchema = z.object({
-  user: z.string(),
-  pass: z.string(),
+export const GmailCredentialsSchema = z.object({
+  platform: z.literal("gmail"),
+  keys: z.object({
+    user: z.string(),
+    pass: z.string(),
+  }),
 });
+export type gmailCredentialsType = z.infer<typeof GmailCredentialsSchema>;
 
-export type gmailCredentialType = z.infer<typeof GmailCredentialCreateSchema>;
 
 //ACTION METADATA
 

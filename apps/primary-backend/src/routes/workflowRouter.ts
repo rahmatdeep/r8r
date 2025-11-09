@@ -34,12 +34,15 @@ router.post("/", authMiddlware, async (req, res) => {
         },
         action: {
           create: parsedData.data.actions.map((x, index) => {
-            if (x.availableActionId === "email") {
+            if (
+              x.availableActionId === "email" ||
+              x.availableActionId === "gmail"
+            ) {
               const emailMetadataValidation =
                 EmailActionMetadataSchema.safeParse(x.actionMetadata);
               if (!emailMetadataValidation.success) {
                 res.status(400).json({
-                  message: "Invalid email action metadata",
+                  message: `Invalid ${x.availableActionId} action metadata`,
                   errors: emailMetadataValidation.error.issues,
                 });
                 throw new Error("Validation failed");
@@ -200,7 +203,7 @@ router.put("/:id", authMiddlware, async (req, res) => {
   }
 
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       await tx.workflow.update({
         where: { id: workflowId },
         data: { title: parsedData.data.title },
@@ -218,13 +221,16 @@ router.put("/:id", authMiddlware, async (req, res) => {
       });
 
       for (const [index, x] of parsedData.data.actions.entries()) {
-        if (x.availableActionId === "email") {
+        if (
+          x.availableActionId === "email" ||
+          x.availableActionId === "gmail"
+        ) {
           const emailMetadataValidation = EmailActionMetadataSchema.safeParse(
             x.actionMetadata
           );
           if (!emailMetadataValidation.success) {
             res.status(400).json({
-              message: "Invalid email action metadata",
+              message: `Invalid ${x.availableActionId} action metadata`,
               errors: emailMetadataValidation.error.issues,
             });
             return;

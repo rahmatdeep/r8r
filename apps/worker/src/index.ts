@@ -3,6 +3,7 @@ import { kafka, TOPIC_NAME } from "@repo/kafka/kafka-client";
 import { processTelegram } from "./utils/telegram";
 import { processEmail } from "./utils/email";
 import { processGemini } from "./utils/gemini";
+import { processGmail } from "./utils/gmail";
 
 (async () => {
   const consumer = kafka.consumer({ groupId: "main-worker" });
@@ -52,7 +53,7 @@ import { processGemini } from "./utils/gemini";
         return;
       }
       const currentAction = workflowRunDetails?.workflow.action.find(
-        (x) => x.sortingOrder === stage
+        (x: any) => x.sortingOrder === stage
       );
       if (!currentAction) {
         console.log("Current action not found");
@@ -62,7 +63,7 @@ import { processGemini } from "./utils/gemini";
       const workflowRunMetadata = workflowRunDetails?.metaData;
 
       const credentials = workflowRunDetails?.workflow.user.Credentials.find(
-        (cred) =>
+        (cred: any) =>
           cred.id ===
           (currentAction?.metadata as { credentialId?: string })?.credentialId
       );
@@ -91,6 +92,13 @@ import { processGemini } from "./utils/gemini";
             workflowRunId
           );
           break;
+        case "gmail":
+          await processGmail(
+            credentials,
+            currentAction,
+            workflowRunMetadata,
+            workflowRunId
+          );
         default:
           console.log("Unknown action selected");
       }

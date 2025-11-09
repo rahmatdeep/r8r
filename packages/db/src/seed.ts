@@ -38,6 +38,11 @@ const prismaClient = new PrismaClient();
         name: "Gemini",
         image: "empty",
       },
+      {
+        id: "gmail",
+        name: "Gmail",
+        image: "empty",
+      },
     ],
   });
 })();

@@ -129,8 +129,8 @@ export function validateGmailCredentials(
   credentials: any
 ): GmailCredentialsValidationResult {
   const missingFields: string[] = [];
-  if (typeof credentials?.user !== "string") missingFields.push("user");
-  if (typeof credentials?.pass !== "string") missingFields.push("pass");
+  if (typeof credentials?.keys.user !== "string") missingFields.push("user");
+  if (typeof credentials?.keys.pass !== "string") missingFields.push("pass");
 
   if (missingFields.length > 0) {
     console.error(
@@ -142,8 +142,8 @@ export function validateGmailCredentials(
   return {
     valid: true,
     value: {
-      user: credentials.user,
-      pass: credentials.pass,
+      user: credentials.keys.user,
+      pass: credentials.keys.pass,
     },
   };
 }
