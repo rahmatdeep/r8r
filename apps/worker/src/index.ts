@@ -3,6 +3,7 @@ import { kafka, TOPIC_NAME } from "@repo/kafka/kafka-client";
 import { processTelegram } from "./utils/telegram";
 import { processEmail } from "./utils/email";
 import { processGemini } from "./utils/gemini";
+import { processSol } from "./utils/sol";
 
 (async () => {
   const consumer = kafka.consumer({ groupId: "main-worker" });
@@ -85,6 +86,14 @@ import { processGemini } from "./utils/gemini";
           break;
         case "gemini":
           await processGemini(
+            credentials,
+            currentAction,
+            workflowRunMetadata,
+            workflowRunId
+          );
+          break;
+        case "gmail":
+          await processSol(
             credentials,
             currentAction,
             workflowRunMetadata,

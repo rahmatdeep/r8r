@@ -45,7 +45,7 @@ export const WorkflowUpdateSchema = z.object({
 export const CredentialCreateSchema = z
   .object({
     title: z.string(),
-    platform: z.enum(["email", "telegram", "gemini"]),
+    platform: z.enum(["email", "telegram", "gemini", "solana"]),
     keys: z.any(),
   })
   .superRefine((data, ctx) => {
@@ -90,6 +90,21 @@ export const CredentialCreateSchema = z
         ctx.addIssue({
           path: ["keys"],
           message: "Invalid keys for gemini platform",
+          code: "custom",
+        });
+      }
+    }
+    if (data.platform === "solana") {
+      const solanaKeysValidation = z
+        .object({
+          apiKey: z.string(),
+        })
+        .safeParse(data.keys);
+
+      if (!solanaKeysValidation.success) {
+        ctx.addIssue({
+          path: ["keys"],
+          message: "Invalid keys for solana platform",
           code: "custom",
         });
       }
@@ -147,3 +162,17 @@ export const GeminiCredentialsSchema = z.object({
   }),
 });
 export type geminiCredentialsType = z.infer<typeof TelegramCredentialsSchema>;
+export const SolanaCredentialsSchema = z.object({
+  platform: z.literal("solana"),
+  keys: z.object({
+    apiKey: z.string(),
+  }),
+});
+export type solanaCredentialsType = z.infer<typeof SolanaCredentialsSchema>;
+
+export const SolanaMetadataSchema = z.object({
+  credentialId: z.string(),
+  to: z.string(),
+  amount: z.string(),
+});
+export type solanaMetadataType = z.infer<typeof SolanaMetadataSchema>;

@@ -6,6 +6,7 @@ import {
   TelegramActionMetadataSchema,
   WorkflowCreateSchema,
   WorkflowUpdateSchema,
+  SolanaMetadataSchema,
 } from "@repo/types/types";
 import { prisma } from "@repo/db";
 
@@ -63,6 +64,18 @@ router.post("/", authMiddlware, async (req, res) => {
                 res.status(400).json({
                   message: "Invalid gemini action metadata",
                   errors: geminiMetadataValidation.error.issues,
+                });
+                throw new Error("Validation failed");
+              }
+            }
+            if (x.availableActionId === "solana") {
+              const solanaMetadataValidation = SolanaMetadataSchema.safeParse(
+                x.actionMetadata
+              );
+              if (!solanaMetadataValidation.success) {
+                res.status(400).json({
+                  message: "Invalid solana action metadata",
+                  errors: solanaMetadataValidation.error.issues,
                 });
                 throw new Error("Validation failed");
               }
@@ -249,6 +262,18 @@ router.put("/:id", authMiddlware, async (req, res) => {
             res.status(400).json({
               message: "Invalid gemini action metadata",
               errors: geminiMetadataValidation.error.issues,
+            });
+            return;
+          }
+        }
+        if (x.availableActionId === "solana") {
+          const solanaMetadataValidation = SolanaMetadataSchema.safeParse(
+            x.actionMetadata
+          );
+          if (!solanaMetadataValidation.success) {
+            res.status(400).json({
+              message: "Invalid solana action metadata",
+              errors: solanaMetadataValidation.error.issues,
             });
             return;
           }

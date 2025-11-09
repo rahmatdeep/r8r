@@ -38,6 +38,11 @@ const prismaClient = new PrismaClient();
         name: "Gemini",
         image: "empty",
       },
+      {
+        id: "solana",
+        name: "Solana",
+        image: "empty",
+      },
     ],
   });
 })();
