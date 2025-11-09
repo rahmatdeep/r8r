@@ -23,7 +23,7 @@ router.post("/", authMiddlware, async (req, res) => {
       data: {
         platform: parsedData.data.platform,
         title: parsedData.data.title,
-        keys: parsedData.data.keys === null ? undefined : parsedData.data.keys,
+        keys: parsedData.data.keys === null ? undefined : parsedData.data.keys, //why are we storing null
         userId: req.id,
       },
     });
