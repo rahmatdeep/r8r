@@ -80,13 +80,13 @@ export const CredentialCreateSchema = z
       }
     }
     if (data.platform === "gemini") {
-      const telegramKeysValidation = z
+      const geminiKeysValidation = z
         .object({
           apiKey: z.string(),
         })
         .safeParse(data.keys);
 
-      if (!telegramKeysValidation.success) {
+      if (!geminiKeysValidation.success) {
         ctx.addIssue({
           path: ["keys"],
           message: "Invalid keys for gemini platform",
