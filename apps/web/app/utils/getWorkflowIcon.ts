@@ -1,10 +1,12 @@
 import {
   Workflow,
   Mail,
-  MessageCircle,
   FileText,
   Webhook,
   Sparkle,
+  Send,
+  Inbox,
+  Wallet,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -15,11 +17,11 @@ export function getWorkflowIcon(
   const lower = labelOrName.toLowerCase();
 
   if (type === "action") {
-    if (lower.includes("email") || lower.includes("mail")) {
-      return Mail;
+    if (lower.includes("email")) {
+      return Inbox;
     }
     if (lower.includes("telegram") || lower.includes("tg")) {
-      return MessageCircle;
+      return Send;
     }
     if (lower.includes("gemini") || lower.includes("gemi")) {
       return Sparkle;
@@ -28,7 +30,7 @@ export function getWorkflowIcon(
       return Mail;
     }
     if (lower.includes("solana")) {
-      return Sparkle; // Or use a custom Solana icon
+      return Wallet; // Or use a custom Solana icon
     }
     return Workflow;
   }
