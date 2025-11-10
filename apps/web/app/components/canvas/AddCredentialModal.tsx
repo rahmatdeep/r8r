@@ -4,7 +4,7 @@ import { createCredential } from "../../utils/api";
 import { credentialCreateType } from "@repo/types/types";
 
 interface AddCredentialModalProps {
-  platform?: "email" | "telegram" | "gemini";
+  platform?: "email" | "telegram" | "gemini" | "solana" | "gmail";
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -15,11 +15,13 @@ export const AddCredentialModal = ({
   onSuccess,
 }: AddCredentialModalProps) => {
   const [platform, setPlatform] = useState<
-    "email" | "telegram" | "gemini" | ""
+    "email" | "telegram" | "gemini" | "solana" | "gmail" | ""
   >(initialPlatform || "");
   const [formData, setFormData] = useState({
     title: "",
     apiKey: "",
+    user: "",
+    pass: "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,11 +37,11 @@ export const AddCredentialModal = ({
       const credentialData: credentialCreateType = {
         title: formData.title,
         platform,
-        keys: {
-          apiKey: formData.apiKey,
-        },
+        keys:
+          platform === "gmail"
+            ? { user: formData.user, pass: formData.pass }
+            : { apiKey: formData.apiKey },
       };
-
       await createCredential(credentialData);
       onSuccess();
     } catch (error) {
@@ -90,6 +92,8 @@ export const AddCredentialModal = ({
                 <option value="email">Email</option>
                 <option value="telegram">Telegram</option>
                 <option value="gemini">Gemini</option>
+                <option value="solana">Solana</option>
+                <option value="gmail">Gmail</option>
               </select>
             </div>
           )}
@@ -111,22 +115,59 @@ export const AddCredentialModal = ({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-[#faf9f5] mb-2">
-              API Key
-            </label>
-            <input
-              type="password"
-              value={formData.apiKey}
-              onChange={(e) =>
-                setFormData({ ...formData, apiKey: e.target.value })
-              }
-              className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] placeholder-[#a6a29e] focus:outline-none focus:border-[#c6613f]"
-              placeholder={`Enter your ${platform || "platform"} API key`}
-              required
-              disabled={!platform}
-            />
-          </div>
+          {platform === "gmail" ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+                  Gmail Address
+                </label>
+                <input
+                  type="email"
+                  value={formData.user || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, user: e.target.value })
+                  }
+                  className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] placeholder-[#a6a29e] focus:outline-none focus:border-[#c6613f]"
+                  placeholder="your@gmail.com"
+                  required
+                  disabled={!platform}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+                  Gmail App Password
+                </label>
+                <input
+                  type="password"
+                  value={formData.pass || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, pass: e.target.value })
+                  }
+                  className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] placeholder-[#a6a29e] focus:outline-none focus:border-[#c6613f]"
+                  placeholder="App password"
+                  required
+                  disabled={!platform}
+                />
+              </div>
+            </>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-[#faf9f5] mb-2">
+                API Key
+              </label>
+              <input
+                type="password"
+                value={formData.apiKey}
+                onChange={(e) =>
+                  setFormData({ ...formData, apiKey: e.target.value })
+                }
+                className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] placeholder-[#a6a29e] focus:outline-none focus:border-[#c6613f]"
+                placeholder={`Enter your ${platform || "platform"} API key`}
+                required
+                disabled={!platform}
+              />
+            </div>
+          )}
 
           <div className="flex gap-3 pt-4">
             <button

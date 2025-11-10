@@ -15,7 +15,7 @@ import {
 export interface CredentialResponse {
   id: string;
   title: string;
-  platform: "email" | "telegram" | "gemini";
+  platform: "email" | "telegram" | "gemini" | "solana" | "gmail";
   keys: {
     apiKey: string;
   };

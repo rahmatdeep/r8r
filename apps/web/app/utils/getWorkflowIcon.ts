@@ -1,4 +1,11 @@
-import { Workflow, Mail, MessageCircle, FileText, Webhook, Sparkle } from "lucide-react";
+import {
+  Workflow,
+  Mail,
+  MessageCircle,
+  FileText,
+  Webhook,
+  Sparkle,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export function getWorkflowIcon(
@@ -14,8 +21,14 @@ export function getWorkflowIcon(
     if (lower.includes("telegram") || lower.includes("tg")) {
       return MessageCircle;
     }
-    if(lower.includes("gemini") || lower.includes("gemi")) {
+    if (lower.includes("gemini") || lower.includes("gemi")) {
       return Sparkle;
+    }
+    if (lower.includes("gmail")) {
+      return Mail;
+    }
+    if (lower.includes("solana")) {
+      return Sparkle; // Or use a custom Solana icon
     }
     return Workflow;
   }

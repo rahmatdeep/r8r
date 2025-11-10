@@ -47,7 +47,7 @@ export default function Dashboard({ session }: DashboardProps) {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [showAddCredential, setShowAddCredential] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<
-    "email" | "telegram" | "gemini"
+    "email" | "telegram" | "gemini" | "solana" | "gmail"
   >("email");
   const [copiedWorkflowId, setCopiedWorkflowId] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);

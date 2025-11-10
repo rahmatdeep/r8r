@@ -191,6 +191,14 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
         setCurrentActionType("gemini");
         setIsActionModalOpen(true);
         break;
+      case "solana":
+        setCurrentActionType("solana");
+        setIsActionModalOpen(true);
+        break;
+      case "gmail":
+        setCurrentActionType("gmail");
+        setIsActionModalOpen(true);
+        break;
       default:
         setCurrentActionType("default");
         setIsActionModalOpen(true);
@@ -440,6 +448,8 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
         case "email":
         case "telegram":
         case "gemini":
+        case "solana":
+        case "gmail":
           setCurrentActionType(item.id);
           setEditingNodeId(newNodeId);
           setIsActionModalOpen(true);

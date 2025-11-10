@@ -3,9 +3,11 @@ import { X } from "lucide-react";
 import {
   EmailActionMetadataSchema,
   GeminiActionMetadataSchema,
+  SolanaMetadataSchema,
   TelegramActionMetadataSchema,
   emailMetadataType,
   geminiMetadataType,
+  solanaMetadataType,
   telegramMetadataType,
 } from "@repo/types/types";
 import { CredentialResponse, getCredentials } from "../../utils/api";
@@ -17,7 +19,11 @@ interface ActionModalProps {
   onClose: () => void;
   onSave: (metadata: {
     type: string;
-    data: emailMetadataType | telegramMetadataType | geminiMetadataType;
+    data:
+      | emailMetadataType
+      | telegramMetadataType
+      | geminiMetadataType
+      | solanaMetadataType;
   }) => void;
   actionType: string;
   userId?: string;
@@ -58,6 +64,7 @@ export const ActionModal = ({
         body: existingMetadata.body || "",
         chatId: existingMetadata.chatId || "",
         message: existingMetadata.message || "",
+        amount: existingMetadata.amount || "",
       });
     }
   }, [isOpen, actionType, existingMetadata]);
@@ -66,9 +73,10 @@ export const ActionModal = ({
     setIsLoading(true);
     try {
       const creds = await getCredentials();
-      const filteredCredentials = creds.filter(
-        (c) => c.platform === actionType
-      );
+      const filteredCredentials = creds.filter((c) => {
+        console.log(`c.platform: ${c.platform}, actionType: ${actionType}`);
+        return c.platform === actionType;
+      });
       setCredentials(filteredCredentials);
 
       // Check if the existing credentialId exists in filtered credentials
@@ -127,9 +135,10 @@ export const ActionModal = ({
       let validatedData:
         | emailMetadataType
         | telegramMetadataType
-        | geminiMetadataType;
+        | geminiMetadataType
+        | solanaMetadataType;
 
-      if (actionType === "email") {
+      if (actionType === "email" || actionType === "gmail") {
         validatedData = EmailActionMetadataSchema.parse({
           credentialId: formData.credentialId,
           from: formData.from,
@@ -147,6 +156,12 @@ export const ActionModal = ({
         validatedData = GeminiActionMetadataSchema.parse({
           credentialId: formData.credentialId,
           message: formData.message,
+        });
+      } else if (actionType === "solana") {
+        validatedData = SolanaMetadataSchema.parse({
+          credentialId: formData.credentialId,
+          to: formData.to,
+          amount: formData.amount,
         });
       } else {
         throw new Error(`Unknown action type: ${actionType}`);
@@ -500,6 +515,35 @@ export const ActionModal = ({
     </div>
   );
 
+  const renderSolanaFields = () => (
+    <>
+      <div>
+        <label className="block text-sm font-medium text-[#faf9f5] mb-3">
+          To Address
+        </label>
+        <input
+          value={formData.to}
+          onChange={(e) => handleInputChange("to", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg text-[#faf9f5] border border-[#4a4945] bg-[#3a3938]"
+          placeholder="Solana address"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-[#faf9f5] mb-3">
+          Amount
+        </label>
+        <input
+          value={formData.amount}
+          onChange={(e) => handleInputChange("amount", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg text-[#faf9f5] border border-[#4a4945] bg-[#3a3938]"
+          placeholder="Amount"
+          required
+        />
+      </div>
+    </>
+  );
+
   if (!isOpen) return null;
 
   if (isLoading) {
@@ -547,9 +591,11 @@ export const ActionModal = ({
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {renderCredentialSelect()}
 
-            {actionType === "email" && renderEmailFields()}
             {actionType === "telegram" && renderTelegramFields()}
             {actionType === "gemini" && renderGeminiFields()}
+            {(actionType === "email" || actionType === "gmail") &&
+              renderEmailFields()}
+            {actionType === "solana" && renderSolanaFields()}
 
             <div className="flex gap-3 pt-4">
               <button
@@ -573,7 +619,9 @@ export const ActionModal = ({
       {/* Add Credential Modal */}
       {showAddCredential && (
         <AddCredentialModal
-          platform={actionType as "email" | "telegram" | "gemini"}
+          platform={
+            actionType as "email" | "telegram" | "gemini" | "gmail" | "solana"
+          }
           onClose={() => setShowAddCredential(false)}
           onSuccess={handleCredentialAdded}
         />
