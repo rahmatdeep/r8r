@@ -14,13 +14,16 @@
   "dependencies": {
     "@google/genai": "^1.21.0",
     "@repo/db": "workspace:*",
+    "@solana/web3.js": "^1.98.4",
     "axios": "^1.12.2",
+    "bs58": "^6.0.0",
     "nodemailer": "^7.0.9",
     "resend": "^6.1.0"
   },
   "devDependencies": {
     "@repo/kafka": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@repo/types": "workspace:*",
     "@types/nodemailer": "^7.0.2"
   }
 }

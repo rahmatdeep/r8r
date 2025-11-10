@@ -39,6 +39,11 @@ const prismaClient = new PrismaClient();
         image: "empty",
       },
       {
+        id: "solana",
+        name: "Solana",
+        image: "empty",
+      },
+      {
         id: "gmail",
         name: "Gmail",
         image: "empty",

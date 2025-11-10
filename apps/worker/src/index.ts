@@ -3,6 +3,7 @@ import { kafka, TOPIC_NAME } from "@repo/kafka/kafka-client";
 import { processTelegram } from "./utils/telegram";
 import { processEmail } from "./utils/email";
 import { processGemini } from "./utils/gemini";
+import { processSol } from "./utils/sol";
 import { processGmail } from "./utils/gmail";
 
 (async () => {
@@ -92,6 +93,14 @@ import { processGmail } from "./utils/gmail";
             workflowRunId
           );
           break;
+        case "solana":
+          await processSol(
+            credentials,
+            currentAction,
+            workflowRunMetadata,
+            workflowRunId
+          );
+          break;
         case "gmail":
           await processGmail(
             credentials,
@@ -99,6 +108,7 @@ import { processGmail } from "./utils/gmail";
             workflowRunMetadata,
             workflowRunId
           );
+          break;
         default:
           console.log("Unknown action selected");
       }

@@ -101,6 +101,8 @@ enum Platforms {
   email
   telegram
   gemini
+  solana
+  gmail
 }
 
 enum WorkflowStatus {

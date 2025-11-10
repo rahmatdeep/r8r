@@ -1,4 +1,5 @@
 import { JsonObject, prisma } from "@repo/db";
+import { solanaMetadataType } from "@repo/types/types";
 
 export function validateCredentials(
   credentials: any,
@@ -103,6 +104,36 @@ export function validateGeminiMetadata(
     valid: true,
     value: {
       message: metadata.message,
+    },
+  };
+}
+
+export type SolanaMetadataValidationResult =
+  | { valid: true; value: solanaMetadataType }
+  | { valid: false; missingFields: string[] };
+
+export function validateSolanaMetadata(
+  metadata: any
+): SolanaMetadataValidationResult {
+  const missingFields: string[] = [];
+  if (typeof metadata?.credentialId !== "string")
+    missingFields.push("credentialId");
+  if (typeof metadata?.to !== "string") missingFields.push("to");
+  if (typeof metadata?.amount !== "string") missingFields.push("amount");
+
+  if (missingFields.length > 0) {
+    console.error(
+      `Solana Action metadata missing required fields: ${missingFields.join(", ")}`
+    );
+    return { valid: false, missingFields };
+  }
+
+  return {
+    valid: true,
+    value: {
+      credentialId: metadata.credentialId,
+      to: metadata.to,
+      amount: metadata.amount,
     },
   };
 }
