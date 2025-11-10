@@ -2,6 +2,7 @@ import { prisma } from "@repo/db";
 import {
   CredentialCreateSchema,
   CredentialDeleteSchema,
+  CredentialUpdateSchema,
 } from "@repo/types/types";
 import { Router } from "express";
 import { authMiddlware } from "../middleware";
@@ -95,6 +96,53 @@ router.delete("/", authMiddlware, async (req, res) => {
     console.error("Error deleting credentials", e);
     res.status(500).json({
       message: "Failed to delete credentials",
+    });
+  }
+});
+
+router.put("/", authMiddlware, async (req, res) => {
+  const parsedData = CredentialUpdateSchema.safeParse(req.body);
+
+  if (!parsedData.success || !req.id) {
+    res.status(403).json({
+      message: "Invalid request data",
+    });
+    return;
+  }
+
+  try {
+    const credential = await prisma.credentials.findUnique({
+      where: { id: parsedData.data.credentialsId },
+    });
+
+    if (!credential || credential.userId !== req.id) {
+      res.status(404).json({
+        message: "Credentials not found or unauthorized",
+      });
+      return;
+    }
+
+    const updateData: any = {};
+    if (parsedData.data.title !== undefined) {
+      updateData.title = parsedData.data.title;
+    }
+
+    if (parsedData.data.keys !== undefined) {
+      updateData.keys = parsedData.data.keys;
+    }
+
+    await prisma.credentials.update({
+      where: { id: parsedData.data.credentialsId },
+      data: updateData,
+    });
+
+    res.json({
+      message: "Credentials updated successfully",
+    });
+  } catch (e) {
+    console.error("Error updating credentials", e);
+    res.status(500).json({
+      message: "Failed to update credentials",
     });
   }
 });
