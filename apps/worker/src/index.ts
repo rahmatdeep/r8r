@@ -92,7 +92,7 @@ import { processSol } from "./utils/sol";
             workflowRunId
           );
           break;
-        case "gmail":
+        case "solana":
           await processSol(
             credentials,
             currentAction,
