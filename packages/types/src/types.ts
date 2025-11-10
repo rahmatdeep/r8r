@@ -201,3 +201,77 @@ export const SolanaCredentialsSchema = z.object({
   }),
 });
 export type solanaCredentialsType = z.infer<typeof SolanaCredentialsSchema>;
+
+export const CredentialUpdateSchema = z
+  .object({
+    credentialsId: z.string(),
+    title: z.string().optional(),
+    platform: z.enum(["email", "telegram", "gemini", "solana", "gmail"]),
+    keys: z.any().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.keys !== undefined) {
+      if (data.platform === "email") {
+        const emailKeysValidation = z
+          .object({ apiKey: z.string() })
+          .safeParse(data.keys);
+        if (!emailKeysValidation.success) {
+          ctx.addIssue({
+            path: ["keys"],
+            message: "Invalid keys for email platform",
+            code: "custom",
+          });
+        }
+      }
+      if (data.platform === "telegram") {
+        const telegramKeysValidation = z
+          .object({ apiKey: z.string() })
+          .safeParse(data.keys);
+        if (!telegramKeysValidation.success) {
+          ctx.addIssue({
+            path: ["keys"],
+            message: "Invalid keys for telegram platform",
+            code: "custom",
+          });
+        }
+      }
+      if (data.platform === "gemini") {
+        const geminiKeysValidation = z
+          .object({ apiKey: z.string() })
+          .safeParse(data.keys);
+        if (!geminiKeysValidation.success) {
+          ctx.addIssue({
+            path: ["keys"],
+            message: "Invalid keys for gemini platform",
+            code: "custom",
+          });
+        }
+      }
+      if (data.platform === "solana") {
+        const solanaKeysValidation = z
+          .object({ apiKey: z.string() })
+          .safeParse(data.keys);
+        if (!solanaKeysValidation.success) {
+          ctx.addIssue({
+            path: ["keys"],
+            message: "Invalid keys for solana platform",
+            code: "custom",
+          });
+        }
+      }
+      if (data.platform === "gmail") {
+        const gmailKeysValidation = z
+          .object({ user: z.string(), pass: z.string() })
+          .safeParse(data.keys);
+        if (!gmailKeysValidation.success) {
+          ctx.addIssue({
+            path: ["keys"],
+            message: "Invalid keys for gmail platform",
+            code: "custom",
+          });
+        }
+      }
+    }
+  });
+
+export type credentialUpdateType = z.infer<typeof CredentialUpdateSchema>;
