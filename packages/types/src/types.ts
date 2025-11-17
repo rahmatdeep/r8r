@@ -275,3 +275,6 @@ export const CredentialUpdateSchema = z
   });
 
 export type credentialUpdateType = z.infer<typeof CredentialUpdateSchema>;
+
+export const PLATFORMS = ["email", "telegram", "gemini", "solana", "gmail"] as const;
+export type Platform = typeof PLATFORMS[number];

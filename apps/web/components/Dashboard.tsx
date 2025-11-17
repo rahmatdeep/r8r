@@ -9,11 +9,10 @@ import {
   SquarePen,
   Trash2,
   Key,
-  Mail,
-  MessageCircle,
   Check,
   Copy,
   Link2,
+  Zap,
 } from "lucide-react";
 import {
   getWorkflows,
@@ -30,6 +29,7 @@ import { Session } from "next-auth";
 import { AddCredentialModal } from "../components/canvas/AddCredentialModal";
 import { Loader2 } from "lucide-react";
 import { getWorkflowIcon } from "../utils/getWorkflowIcon";
+import { Platform } from "@repo/types/types";
 
 type TabType = "workflows" | "credentials" | "history";
 
@@ -46,14 +46,14 @@ export default function Dashboard({ session }: DashboardProps) {
   const [loadingCredentials, setLoadingCredentials] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [showAddCredential, setShowAddCredential] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<
-    "email" | "telegram" | "gemini" | "solana" | "gmail"
-  >("email");
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>("email");
   const [copiedWorkflowId, setCopiedWorkflowId] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [deletingWorkflowId, setDeletingWorkflowId] = useState<string | null>(
     null
   );
+  const [editingCredential, setEditingCredential] =
+    useState<CredentialResponse | null>(null);
   const [deletingCredentialId, setDeletingCredentialId] = useState<
     string | null
   >(null);
@@ -337,6 +337,13 @@ export default function Dashboard({ session }: DashboardProps) {
                         <Trash2 className="w-4 h-4" />
                       )}
                     </button>
+                    <button
+                      onClick={() => setEditingCredential(credential)}
+                      className="p-2 text-[#a6a29e] hover:text-blue-400 hover:bg-blue-900/10 rounded-lg transition-all duration-200"
+                      title="Edit credential"
+                    >
+                      <SquarePen className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -349,6 +356,18 @@ export default function Dashboard({ session }: DashboardProps) {
         <AddCredentialModal
           onClose={() => setShowAddCredential(false)}
           onSuccess={handleCredentialAdded}
+        />
+      )}
+      {/* Edit Credential Modal */}
+      {editingCredential && (
+        <AddCredentialModal
+          initialData={editingCredential}
+          isEdit={true}
+          onClose={() => setEditingCredential(null)}
+          onSuccess={() => {
+            setEditingCredential(null);
+            handleCredentialAdded();
+          }}
         />
       )}
     </div>
@@ -490,9 +509,12 @@ export default function Dashboard({ session }: DashboardProps) {
       <nav className="bg-[#30302e] border-b border-[#4a4945]">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight text-[#faf9f5]">
-              r8r
-            </h1>
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-[#c6613f] rounded-lg flex items-center justify-center">
+                <Zap className="w-6 h-6 text-[#faf9f5]" />
+              </div>
+              <span className="text-2xl font-bold">r8r</span>
+            </div>
             <div className="flex items-center gap-6">
               {/* Primary Action */}
               <Link
