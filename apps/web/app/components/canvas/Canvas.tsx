@@ -524,7 +524,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
           },
           workflowId
         );
-        router.push("/");
+        router.push("/dashboard");
         console.log("Workflow saved successfully", workflow);
       } catch (error) {
         console.error("Failed to save workflow:", error);

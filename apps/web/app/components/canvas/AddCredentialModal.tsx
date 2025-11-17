@@ -1,27 +1,41 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import { createCredential } from "../../utils/api";
-import { credentialCreateType } from "@repo/types/types";
+import { createCredential, updateCredential } from "../../utils/api";
+import {
+  credentialCreateType,
+  credentialUpdateType,
+  Platform,
+  PLATFORMS,
+} from "@repo/types/types";
 
 interface AddCredentialModalProps {
-  platform?: "email" | "telegram" | "gemini" | "solana" | "gmail";
+  platform?: Platform;
   onClose: () => void;
   onSuccess: () => void;
+  initialData?: {
+    id: string;
+    title: string;
+    platform: string;
+    keys: any;
+  };
+  isEdit?: boolean;
 }
 
 export const AddCredentialModal = ({
   platform: initialPlatform,
   onClose,
   onSuccess,
+  initialData,
+  isEdit,
 }: AddCredentialModalProps) => {
-  const [platform, setPlatform] = useState<
-    "email" | "telegram" | "gemini" | "solana" | "gmail" | ""
-  >(initialPlatform || "");
+  const [platform, setPlatform] = useState<Platform | "">(
+    (initialData?.platform as Platform) || (initialPlatform as Platform) || ""
+  );
   const [formData, setFormData] = useState({
-    title: "",
-    apiKey: "",
-    user: "",
-    pass: "",
+    title: initialData?.title || "",
+    apiKey: initialData?.keys?.apiKey || "",
+    user: initialData?.keys?.user || "",
+    pass: initialData?.keys?.pass || "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -34,24 +48,38 @@ export const AddCredentialModal = ({
     setIsLoading(true);
 
     try {
-      const credentialData: credentialCreateType = {
-        title: formData.title,
-        platform,
-        keys:
-          platform === "gmail"
-            ? { user: formData.user, pass: formData.pass }
-            : { apiKey: formData.apiKey },
-      };
-      await createCredential(credentialData);
+      if (isEdit && initialData?.id) {
+        // Update credential
+        const credentialData: credentialUpdateType = {
+          credentialsId: initialData.id,
+          title: formData.title,
+          platform,
+          keys:
+            platform === "gmail"
+              ? { user: formData.user, pass: formData.pass }
+              : { apiKey: formData.apiKey },
+        };
+        await updateCredential(credentialData);
+      } else {
+        // Add credential
+        const credentialData: credentialCreateType = {
+          title: formData.title,
+          platform,
+          keys:
+            platform === "gmail"
+              ? { user: formData.user, pass: formData.pass }
+              : { apiKey: formData.apiKey },
+        };
+        await createCredential(credentialData);
+      }
       onSuccess();
     } catch (error) {
-      console.error("Failed to create credential:", error);
-      alert("Failed to create credential. Please try again.");
+      console.error("Failed to save credential:", error);
+      alert("Failed to save credential. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div
@@ -80,20 +108,18 @@ export const AddCredentialModal = ({
               </label>
               <select
                 value={platform}
-                onChange={(e) =>
-                  setPlatform(e.target.value as "email" | "telegram" | "gemini")
-                }
+                onChange={(e) => setPlatform(e.target.value as Platform)}
                 className="w-full px-3 py-2 bg-[#3a3938] border border-[#4a4945] rounded-lg text-[#faf9f5] focus:outline-none focus:border-[#c6613f]"
                 required
               >
                 <option value="" disabled>
                   Select platform
                 </option>
-                <option value="email">Email</option>
-                <option value="telegram">Telegram</option>
-                <option value="gemini">Gemini</option>
-                <option value="solana">Solana</option>
-                <option value="gmail">Gmail</option>
+                {PLATFORMS.map((p) => (
+                  <option key={p} value={p}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                  </option>
+                ))}
               </select>
             </div>
           )}
