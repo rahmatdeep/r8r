@@ -655,7 +655,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
       {/* Header */}
       <div className="absolute top-4 left-4 z-10">
         <Link
-          href="/"
+          href="/dashboard"
           className="flex items-center gap-2 bg-[#30302e] hover:bg-[#3a3938] px-2 py-2 rounded-lg text-[#faf9f5] transition-colors border border-[#4a4945]"
         >
           <ArrowLeft className="w-4 h-4" />
