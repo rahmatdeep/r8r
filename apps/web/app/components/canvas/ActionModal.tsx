@@ -3,7 +3,6 @@ import { X } from "lucide-react";
 import {
   EmailActionMetadataSchema,
   GeminiActionMetadataSchema,
-  Platform,
   SolanaMetadataSchema,
   TelegramActionMetadataSchema,
   emailMetadataType,
@@ -75,6 +74,7 @@ export const ActionModal = ({
     try {
       const creds = await getCredentials();
       const filteredCredentials = creds.filter((c) => {
+        console.log(`c.platform: ${c.platform}, actionType: ${actionType}`);
         return c.platform === actionType;
       });
       setCredentials(filteredCredentials);
@@ -619,7 +619,9 @@ export const ActionModal = ({
       {/* Add Credential Modal */}
       {showAddCredential && (
         <AddCredentialModal
-          platform={actionType as Platform}
+          platform={
+            actionType as "email" | "telegram" | "gemini" | "gmail" | "solana"
+          }
           onClose={() => setShowAddCredential(false)}
           onSuccess={handleCredentialAdded}
         />

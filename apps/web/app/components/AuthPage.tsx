@@ -105,7 +105,7 @@ export function AuthPage({ isSignin }: { isSignin: boolean }) {
       setError(result.error);
       setIsPending(false);
     } else {
-      router.push("/dashboard");
+      router.push("/");
     }
   };
 
@@ -229,7 +229,7 @@ export function AuthPage({ isSignin }: { isSignin: boolean }) {
             <div className="text-sm text-[#a6a29e]">
               {isSignin ? (
                 <p>
-                  Don&apos;t have an account?
+                  Don&apos;t have an account?{" "}
                   <Link
                     href="/signup"
                     className="text-[#c6613f] hover:text-[#b5572e] font-medium transition-colors"
@@ -239,7 +239,7 @@ export function AuthPage({ isSignin }: { isSignin: boolean }) {
                 </p>
               ) : (
                 <p>
-                  Already have an account?
+                  Already have an account?{" "}
                   <Link
                     href="/signin"
                     className="text-[#c6613f] hover:text-[#b5572e] font-medium transition-colors"

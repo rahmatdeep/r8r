@@ -10,15 +10,12 @@ import {
   emailMetadataType,
   geminiMetadataType,
   telegramMetadataType,
-  credentialUpdateType,
-  CredentialUpdateSchema,
-  Platform,
 } from "@repo/types/types";
 
 export interface CredentialResponse {
   id: string;
   title: string;
-  platform: Platform;
+  platform: "email" | "telegram" | "gemini" | "solana" | "gmail";
   keys: {
     apiKey: string;
   };
@@ -43,18 +40,6 @@ export const createCredential = async (
     await apiClient.post("/credentials", validatedData);
   } catch (error) {
     console.error("Failed to create credential:", error);
-    throw error;
-  }
-};
-
-export const updateCredential = async (
-  credentialData: credentialUpdateType
-): Promise<void> => {
-  try {
-    const validatedData = CredentialUpdateSchema.parse(credentialData);
-    await apiClient.put("/credentials", validatedData);
-  } catch (error) {
-    console.error("Failed to update credential:", error);
     throw error;
   }
 };
