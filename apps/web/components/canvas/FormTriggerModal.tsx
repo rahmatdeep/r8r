@@ -13,6 +13,7 @@ interface FormTriggerModalProps {
   userId: string;
   workflowId: string;
   initialFields?: Field[];
+  initialTitle?: string;
 }
 interface Field {
   label: string;
@@ -27,18 +28,20 @@ export function FormTriggerModal({
   userId,
   workflowId,
   initialFields = [],
+  initialTitle = "",
 }: FormTriggerModalProps) {
   const [fields, setFields] = useState<Field[]>([]);
   const formUrl = `${window.location.origin}/forms/${userId}/${workflowId}`;
-  const [formTitle, setFormTitle] = useState("");
+  const [formTitle, setFormTitle] = useState(initialTitle);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setFields(initialFields);
+      setFormTitle(initialTitle);
       setCopied(false);
     }
-  }, [isOpen, initialFields]);
+  }, [isOpen, initialFields, initialTitle]);
 
   const handleCopyUrl = async () => {
     try {

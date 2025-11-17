@@ -762,6 +762,7 @@ export default function Canvas({ workflowId, session }: CanvasProps) {
         userId={session.userId}
         workflowId={currentWorkflowId}
         initialFields={triggerMetadata?.fields || []}
+        initialTitle={triggerMetadata?.title || ""}
       />
     </div>
   );
