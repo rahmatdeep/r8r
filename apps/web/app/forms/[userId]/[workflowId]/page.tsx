@@ -1,5 +1,5 @@
 "use server";
-import FormClient from "../../../components/FormClient";
+import FormClient from "../../../../components/FormClient";
 
 export default async function PublicFormPage({
   params,

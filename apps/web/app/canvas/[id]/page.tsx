@@ -1,7 +1,7 @@
 import { authOptions } from "../../api/auth/[...nextauth]/options";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import Canvas from "../../components/canvas/Canvas";
+import Canvas from "../../../components/canvas/Canvas";
 
 interface EditCanvasPageProps {
   params: {
