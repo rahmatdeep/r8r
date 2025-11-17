@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getWorkflowById, triggerWebhookManually } from "../utils/api";
+import { getFormMetadataById, triggerWebhookManually } from "../utils/api";
 import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toCamelCase } from "../utils/toCamelCase";
 
@@ -27,9 +27,9 @@ export default function FormClient({
     async function fetchFields() {
       setLoading(true);
       try {
-        const workflow = await getWorkflowById(workflowId);
-        setFields(workflow?.trigger?.metadata?.fields || []);
-        setFormTitle(workflow?.trigger?.metadata?.title || "Fill the Form");
+        const workflow = await getFormMetadataById(workflowId);
+        setFields(workflow?.fields || []);
+        setFormTitle(workflow?.title || "Fill the Form");
         setLoading(false);
       } catch {
         setError("Workflow not found or access denied.");

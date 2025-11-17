@@ -257,3 +257,15 @@ export const triggerWebhookManually = async (
     throw error;
   }
 };
+
+export const getFormMetadataById = async (workflowId: string) => {
+  try {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/form/${workflowId}`
+    );
+    return response.data.formMetadata?.trigger?.metadata;
+  } catch (error) {
+    console.error("Failed to fetch form metadata:", error);
+    return null;
+  }
+};
